@@ -106,7 +106,7 @@ for i in range(stepCnt):
 
 ### Plot
 
-Our final step is to plot the results so that we can see the `trajetory` of the Rössler system over these 50 seconds of integration.
+Our final step is to plot the results so that we can see the `trajectory` of the Rössler system over these 50 seconds of integration.
 
 
 ```python
