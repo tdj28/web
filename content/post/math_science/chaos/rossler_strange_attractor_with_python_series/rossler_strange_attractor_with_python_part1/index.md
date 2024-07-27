@@ -120,6 +120,3 @@ plt.title('Rössler')
 
 ![png](output_12_1.png)
 
-### What's next
-
-OK, we have seen it, but what is it, and how deep does the rabbit hole go? Part 2 will explore this further.
