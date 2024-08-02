@@ -183,6 +183,8 @@ processed_frame_names.sort(key=lambda p: int(os.path.splitext(p)[0].split('_')[-
 
 ## People Detection and Segmentation
 
+### Detecting people with YOLO
+
 Using YOLO, we detect people in the frames and highlight those whose bounding boxes fall within a designated red zone.
 
 ![Frame 30 with detection region masked transparent-red and blue bounding boxes from YOLO people detection](image.png)
@@ -268,7 +270,7 @@ labels = np.ones(len(points), dtype=np.int32)
 plt.show()
 ```
 
-## Initializing the Segment Anything 2 Predictor
+### Initializing the Segment Anything 2 Predictor
 
 We initialize the SAM2 predictor to generate masks for each detected person as follows.
 
@@ -399,7 +401,7 @@ with torch.inference_mode(), torch.autocast("cuda", dtype=torch.bfloat16):
     plt.show()
 ```
 
-## Propagating Masks Through the Video
+### Propagating Masks Through the Video
 
 We propagate the masks generated in the first frame through the entire video.
 
@@ -487,7 +489,7 @@ The resulting video demonstrates how SAM2 maintains distinct object tracking thr
 Note how the occlusion of the person masked in green by the person masked in orange does not cause the loss of 
 tracking for the person masked in green. Even more impressive, the person masked in red is not lost by SAM2 despite being heavily occluded.
 
-## Conclusion
+## Conclusions
 
 We demonstrated a way to detect and track people seen passing through a designated detection region in a video using YOLO to
 bootstrap SAM2. Next steps include:
