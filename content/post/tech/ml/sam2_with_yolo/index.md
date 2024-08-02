@@ -7,8 +7,11 @@ summary: A quick and dirty example of creating a chef cookbook with rspec tests.
 tags:
   - ml
   - sam2
+  - python
+  - yolo
 categories:
   - demos
+  - ai/ml
 toc: true
 ---
 
