@@ -21,7 +21,7 @@ META's recent release of [Segment Anything 2](https://github.com/facebookresearc
 where both the code _and_ the models are opensource, opens the door for many interesting use cases. One use case is people detection and
 tracking. 
 
-Say, for example, I wanted to _detect_ and _track_ if people enter some region in my camera's view. The 
+Suppose, for example, that I wanted to _detect_ and _track_ if people enter some region in my camera's view. The 
 [YOLO toolset](https://github.com/ultralytics/yolov5) has
 been widely used for people detection, and here we use it to detect people whose YOLO-created bounding box intersects with a chosen
 detection region. Then we use points around the center of that bounding box as seeds for tracking those individuals with SAM2.
@@ -163,7 +163,7 @@ output_folder_path = f"{HOME}/processed"
 convert_mp4_to_jpg(mp4_file_path, output_folder_path, one_frame_per_second=False)
 ```
 
-Finally, we put all the frame file paths in a list for later processing.:
+Finally, we put all the frame file paths in a list for later processing:
 
 ```python
 # Scan all the frame names in the processed directory
@@ -298,7 +298,7 @@ def show_points(coords, labels, ax, marker_size=200):
     ax.scatter(neg_points[:, 0], neg_points[:, 1], color='red', marker='*', s=marker_size, edgecolor='white', linewidth=1.25) 
 ```
 
-We alos have a few helper functions to make our code DRY/cleaner:
+We also have a few helper functions to make our code DRY/cleaner:
 
 ```python
 
@@ -399,7 +399,7 @@ with torch.inference_mode(), torch.autocast("cuda", dtype=torch.bfloat16):
 We propagate the masks generated in the first frame through the entire video.
 
 {{< notice note >}}
-Note that the way we are doing this here is not
+The way we are doing this here is not
 efficient as we are propegating one detected person at a time, and then applying the masks later to the final image. This was
 done because detecing multiple people at once was showing some unwanted artifacts. In a future iteration of this, we will try 
 to do the propegation for all detected points at the same time rather than via loops.
@@ -434,7 +434,7 @@ with torch.inference_mode(), torch.autocast("cuda", dtype=torch.bfloat16):
 
 We save the output frames as PNG for better quality (though at a cost of more disk space):
 
-```
+```python
 # Define the output directory for the frames
 output_dir = os.path.join(f"{HOME}", 'output_frames')
 os.makedirs(output_dir, exist_ok=True)
@@ -477,7 +477,17 @@ clip.write_videofile(video_output_path, codec='libx264')
 
 {{< youtube 3IbUXK2mydY >}}
 
-Note how the occlusion of the person masked in green by the person masked in orange does not cause the loss of tracking for the person masked in green. Even more impressive, the person masked in red is not lost by SAM2 despite being heavily occluded.
+Note how the occlusion of the person masked in green by the person masked in orange does not cause the loss of 
+tracking for the person masked in green. Even more impressive, the person masked in red is not lost by SAM2 despite being heavily occluded.
 
 ## Conclusion
-In this post, we demonstrated how to detect and track people crossing designated zones in a video using YOLO and SAM2. Next steps will be linked below when released.
+
+We demonstrated a way to detect and track people seen passing through a designated detection region in a video using YOLO to
+bootstrap SAM2. Next steps include:
+
+* Cleaning up the code, de-looping the detection (see note in the SAM2 process section)
+* Dockerizing this process
+* Exploring monocular depth estimation as a way to more accurately detect proximity:
+    * Monocular depth estimation uses trained models that can pick up lighting cues to recreate the information related to the z axis in 2D video.
+    * In a subset of cases (perhaps even the majority of cases?), this recreation of z-axis depth perception is accurate enough to provide reliable detection of proximity in all three dimensions of space.
+    * Monocular depth estimation is being studied, for example, [by Toyota] in regards to autonomous vehicle driving. Further, the related field of Gaussian Splat is a very [active area of research](https://github.com/MrNeRF/awesome-3D-gaussian-splatting/blob/main/README.md).
