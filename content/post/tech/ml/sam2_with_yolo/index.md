@@ -19,7 +19,7 @@ toc: true
 META's recent release of [Segment Anything 2](https://github.com/facebookresearch/segment-anything-2) (SAM2) as a fully opensource project, 
 where both the code _and_ the models are opensource, opens the door for many interesting use cases. One use case is people detection and
 tracking. Say, for example, I wanted to _detect_ and _track_ if people enter some region in my camera's view. The YOLO toolset has
-been widely use for people detection, and here we use it to detect people whose YOLO-created bounding box intersects with a chosen
+been widely used for people detection, and here we use it to detect people whose YOLO-created bounding box intersects with a chosen
 detection region. Then we use points around the center of that bounding box as seeds for tracking those individuals with SAM2.
 
 ## Procedure
@@ -289,6 +289,8 @@ clip.write_videofile(video_output_path, codec='libx264')
 ```
 
 {{< youtube 3IbUXK2mydY >}}
+
+Note how the occlusion of the person masked in green by the person masked in orange does not cause the loss of tracking for the person masked in green. Even more impressive, the person masked in red is not lost by SAM2 despite being heavily occluded.
 
 ## Conclusion
 In this post, we demonstrated how to detect and track people crossing designated zones in a video using YOLO and SAM2. Next steps will be linked below when released.
