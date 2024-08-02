@@ -222,7 +222,10 @@ with torch.inference_mode(), torch.autocast("cuda", dtype=torch.bfloat16):
 
 ## Propagating Masks Through the Video
 
-We propagate the masks generated in the first frame through the entire video.
+We propagate the masks generated in the first frame through the entire video. Note that the way we are doing this here is not
+efficient as we are propegating one detected person at a time, and then applying the masks later to the final image. This was
+done because detecing multiple people at once was showing some unwanted artifacts. In a future iteration of this, we will try 
+to do the propegation for all detected points at the same time rather than via loops.
 
 
 ```
