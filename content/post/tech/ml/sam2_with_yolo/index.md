@@ -401,7 +401,7 @@ with torch.inference_mode(), torch.autocast("cuda", dtype=torch.bfloat16):
     plt.show()
 ```
 
-### Propagating Masks Through the Video
+### Propagating SAM2 Detections Forward Throughout the Video
 
 We propagate the masks generated in the first frame through the entire video.
 
