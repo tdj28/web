@@ -180,7 +180,7 @@ processed_frame_names.sort(key=lambda p: int(os.path.splitext(p)[0].split('_')[-
 
 Using YOLO, we detect people in the frames and highlight those whose bounding boxes fall within a designated red zone.
 
-![alt text](image.png)
+![Frame 30 with detection region masked transparent-red and blue bounding boxes from YOLO people detection](image.png)
 
 We pick which frame to detect in and set an image_path variable:
 
@@ -274,7 +274,7 @@ This is done to improve the SAM2 detection results. The YOLO bounding box center
 detected individual, so selecting a few points above helps ensure we target the whole individual more reliably with SAM2.
 {{< /notice >}}
 
-![alt text](image-1.png)
+![Frame 30 with detection region masked transparent-red and blue bounding boxes from YOLO people detection; in addition we now show the transparent masks from SAM2](image-1.png)
 
 We use some functions to help us with plotting and DRYing up some detections.
 These first two functions come directly from SAM2's example notebook:
