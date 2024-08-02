@@ -17,8 +17,8 @@ toc: true
 
 ## Introduction
 
-META's recent release of [Segment Anything 2](https://github.com/facebookresearch/segment-anything-2) (SAM2) as a fully opensource project, 
-where both the code _and_ the models are opensource, opens the door for many interesting use cases. One use case is people detection and
+META's recent release of [Segment Anything 2](https://github.com/facebookresearch/segment-anything-2) (SAM2) as a fully open-source project, 
+where both the code _and_ the models are open-source, opens the door for many interesting use cases. One use case is people detection and
 tracking. 
 
 Suppose, for example, that I wanted to _detect_ and _track_ if people enter some region in my camera's view. The 
@@ -27,7 +27,7 @@ been widely used for people detection, and here we use it to detect people whose
 detection region. Then we use points around the center of that bounding box as seeds for tracking those individuals with SAM2.
 
 {{< notice warning >}}
-This code is shared purely for research purposes and should not be used as is for anything beyond education. The reliability of
+This code is shared purely for research purposes and should not be used as-is for anything beyond education. The reliability of
 these tools in production settings needs to be tested thoroughly
 {{< /notice >}}
 
@@ -49,7 +49,7 @@ Code for this post can be found [here](https://github.com/tdj28/using-yolo-with-
 First, we need to set up the environment and install the required packages:
 
 {{< notice tip >}}
-The pinning of package versions here is to help ensure that this code can work as is out of the box; however, you may
+The pinning of package versions here is to help ensure that this code can work as is out-of-the-box; however, you may
 get better results by unpinning these versions and just using the latest code. It is generally best practice to pin packages 
 in _production_ environments.
 {{< /notice >}}
@@ -407,8 +407,8 @@ We propagate the masks generated in the first frame through the entire video.
 
 {{< notice note >}}
 The way we are doing this here is not
-efficient as we are propegating one detected person at a time, and then applying the masks later to the final image. This was
-done because detecing multiple people at once was showing some unwanted artifacts. In a future iteration of this, we will try 
+efficient as we are propagating one detected person at a time, and then applying the masks later to the final image. This was
+done because detecting multiple people at once was showing some unwanted artifacts. In a future iteration of this, we will try 
 to do the propegation for all detected points at the same time rather than via loops.
 {{< /notice >}}
 
