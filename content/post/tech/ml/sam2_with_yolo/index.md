@@ -475,6 +475,8 @@ clip = ImageSequenceClip(frame_paths, fps=frame_rate)
 clip.write_videofile(video_output_path, codec='libx264')
 ```
 
+The resulting video demonstrates how SAM2 maintains distinct object tracking throughout the video duration:
+
 {{< youtube 3IbUXK2mydY >}}
 
 Note how the occlusion of the person masked in green by the person masked in orange does not cause the loss of 
