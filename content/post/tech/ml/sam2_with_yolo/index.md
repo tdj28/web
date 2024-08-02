@@ -19,7 +19,9 @@ toc: true
 
 META's recent release of [Segment Anything 2](https://github.com/facebookresearch/segment-anything-2) (SAM2) as a fully opensource project, 
 where both the code _and_ the models are opensource, opens the door for many interesting use cases. One use case is people detection and
-tracking. Say, for example, I wanted to _detect_ and _track_ if people enter some region in my camera's view. The 
+tracking. 
+
+Say, for example, I wanted to _detect_ and _track_ if people enter some region in my camera's view. The 
 [YOLO toolset](https://github.com/ultralytics/yolov5) has
 been widely used for people detection, and here we use it to detect people whose YOLO-created bounding box intersects with a chosen
 detection region. Then we use points around the center of that bounding box as seeds for tracking those individuals with SAM2.
