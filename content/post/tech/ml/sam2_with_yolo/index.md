@@ -35,7 +35,7 @@ these tools in production settings needs to be tested thoroughly
 
 Code for this post can be found [here](https://github.com/tdj28/using-yolo-with-sam2-and-monocular-depth).
 
-## Procedure
+### Procedure
 
 * Create synthetic camera footage with [Runway ML Gen 3](https://runwayml.com/)
 * Pick a frame early in the synthetic footage, in this case, frame 30
@@ -44,7 +44,7 @@ Code for this post can be found [here](https://github.com/tdj28/using-yolo-with-
 * Get a subset of detection bounding boxes which intersect with the detection region
 * Get the center point of the detection bounding boxes in that subset, and use those as seeds for SAM2 to track those individuals through the remainder of the video
 
-## Setup
+### Setup
 
 First, we need to set up the environment and install the required packages:
 
@@ -72,6 +72,7 @@ in _production_ environments.
 # Download the pre-trained SAM2 model
 !wget -q https://dl.fbaipublicfiles.com/segment_anything_2/072824/sam2_hiera_large.pt -P checkpoints
 ```
+
 
 ## Loading and Processing the Video
 
