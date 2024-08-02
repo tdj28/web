@@ -490,4 +490,4 @@ bootstrap SAM2. Next steps include:
 * Exploring monocular depth estimation as a way to more accurately detect proximity:
     * Monocular depth estimation uses trained models that can pick up lighting cues to recreate the information related to the z axis in 2D video.
     * In a subset of cases (perhaps even the majority of cases?), this recreation of z-axis depth perception is accurate enough to provide reliable detection of proximity in all three dimensions of space.
-    * Monocular depth estimation is being studied, for example, [by Toyota] in regards to autonomous vehicle driving. Further, the related field of Gaussian Splat is a very [active area of research](https://github.com/MrNeRF/awesome-3D-gaussian-splatting/blob/main/README.md).
+    * Monocular depth estimation is being studied, for example, [by Toyota](https://medium.com/toyotaresearch/monocular-depth-in-the-real-world-99c2b287df34) in regards to autonomous vehicle driving. Further, the related field of Gaussian Splat is a very [active area of research](https://github.com/MrNeRF/awesome-3D-gaussian-splatting/blob/main/README.md).
