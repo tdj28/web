@@ -15,8 +15,6 @@ categories:
 toc: true
 ---
 
-# Using YOLO People Detection to seed Segment Anything 2 in Video
-
 ## Introduction
 
 META's recent release of [Segment Anything 2](https://github.com/facebookresearch/segment-anything-2) (SAM2) as a fully opensource project, 
