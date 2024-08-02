@@ -158,7 +158,7 @@ def convert_mp4_to_jpg(mp4_file, output_folder, one_frame_per_second=False):
 
 mp4_file_path = f"{HOME}/videos/input_video.mp4"  # Replace with your mp4 file path
 output_folder_path = f"{HOME}/processed"
-convert_mp4_to_jpg(mp4_file_path, output_folder_path, one_frame_per_second=True)
+convert_mp4_to_jpg(mp4_file_path, output_folder_path, one_frame_per_second=False)
 ```
 
 Finally, we put all the frame file paths in a list for later processing.:
