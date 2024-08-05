@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Risk-Analysis on</title><link>https://tdj28.github.io/tags/risk-analysis/</link><description>Recent content in Risk-Analysis on</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sun, 24 Jun 2018 19:21:05 -0700</lastBuildDate><atom:link href="https://tdj28.github.io/tags/risk-analysis/index.xml" rel="self" type="application/rss+xml"/><item><title>A Risk Analysis Bowtie Diagram in Latex</title><link>https://tdj28.github.io/p/a-risk-analysis-bowtie-diagram-in-latex/</link><pubDate>Sun, 24 Jun 2018 19:21:05 -0700</pubDate><guid>https://tdj28.github.io/p/a-risk-analysis-bowtie-diagram-in-latex/</guid><description>&lt;h3 id="bowtie-diagram-in-latex">Bowtie Diagram in LaTeX
+&lt;/h3>&lt;p>For folks who have to conduct risk analysis, there are
+very limited choices for the creation of &amp;ldquo;bowtie diagrams&amp;rdquo;.
+Searching the web for examples in LaTeX comes up pretty empty.
+So when googling comes up empty, its time to create:&lt;/p>
+&lt;p>&lt;a class="link" href="https://github.com/3implieschaos/latex-demos/blob/master/figures/bowtie/bowtie.tex" target="_blank" rel="noopener"
+>Bowtie diagram in LaTeX example&lt;/a>&lt;/p>
+&lt;p>This code results in a diagram that looks pretty acceptable
+in terms of quality, or at least an acceptable starting point:&lt;/p>
+&lt;p>&lt;img src="https://tdj28.github.io/p/a-risk-analysis-bowtie-diagram-in-latex/assets/bowtie.png"
+width="2442"
+height="1014"
+srcset="https://tdj28.github.io/p/a-risk-analysis-bowtie-diagram-in-latex/assets/bowtie_hu16712095989164531860.png 480w, https://tdj28.github.io/p/a-risk-analysis-bowtie-diagram-in-latex/assets/bowtie_hu17423726680510094979.png 1024w"
+loading="lazy"
+alt="bowtie diagram"
+class="gallery-image"
+data-flex-grow="240"
+data-flex-basis="577px"
+>&lt;/p></description></item></channel></rss>

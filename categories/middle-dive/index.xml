@@ -1,0 +1,1391 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Middle-Dive on</title><link>https://tdj28.github.io/categories/middle-dive/</link><description>Recent content in Middle-Dive on</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sun, 19 Aug 2018 19:21:05 -0700</lastBuildDate><atom:link href="https://tdj28.github.io/categories/middle-dive/index.xml" rel="self" type="application/rss+xml"/><item><title>Using PNNL's new Cividis colormap in data science to make accessible heat maps</title><link>https://tdj28.github.io/p/using-pnnls-new-cividis-colormap-in-data-science-to-make-accessible-heat-maps/</link><pubDate>Sun, 19 Aug 2018 19:21:05 -0700</pubDate><guid>https://tdj28.github.io/p/using-pnnls-new-cividis-colormap-in-data-science-to-make-accessible-heat-maps/</guid><description>&lt;p>Heat maps have become quite common in data science, and in science in general, and for good reason. For those who can see them, they succinctly summarize patterns in data. There are many color schemes used in the wild, with the Rainbow scheme being one of the more common ones.&lt;/p>
+&lt;p>A group at &lt;a class="link" href="https://www.pnnl.gov/" target="_blank" rel="noopener"
+>Pacific Northwest National Lab&lt;/a> has recently published a &lt;a class="link" href="https://arxiv.org/pdf/1712.01662.pdf" target="_blank" rel="noopener"
+>PLOS One article&lt;/a> (hat tip &lt;a class="link" href="https://www.scientificamerican.com/article/end-of-the-rainbow-new-map-scale-is-more-readable-by-people-who-are-color-blind/" target="_blank" rel="noopener"
+>Scientific American article&lt;/a>) outlining their efforts to use mathematical modeling and the science of vision to create color maps for plots such that the exact same information is conveyed to those with and without color blindness.&lt;/p>
+&lt;p>The goal of this blogpost is to demonstrate a quick way you can utilize their results in your own graphs (if you use Python). Interested readers can follow the links above for more detail on their methodology. What follows below is enough to get you off the ground using their Cividis colormap right away. Here is a sample of the difference one can get using Cividis:&lt;/p>
+&lt;p>&lt;img src="https://tdj28.github.io/p/using-pnnls-new-cividis-colormap-in-data-science-to-make-accessible-heat-maps/assets/Cividis-heatmap-41643744.png"
+width="1582"
+height="714"
+srcset="https://tdj28.github.io/p/using-pnnls-new-cividis-colormap-in-data-science-to-make-accessible-heat-maps/assets/Cividis-heatmap-41643744_hu3577220855860866480.png 480w, https://tdj28.github.io/p/using-pnnls-new-cividis-colormap-in-data-science-to-make-accessible-heat-maps/assets/Cividis-heatmap-41643744_hu15403655901883397564.png 1024w"
+loading="lazy"
+alt="before and after"
+class="gallery-image"
+data-flex-grow="221"
+data-flex-basis="531px"
+>&lt;/p>
+&lt;p>The sample above is just a starting point. More sophisticated examples of the use of Cividis can be found in the corresponding library and the above reference article.&lt;/p>
+&lt;h2 id="installing-the-library">Installing the Library
+&lt;/h2>&lt;aside aria-label="note" class="note">
+&lt;div>
+&lt;pre>&lt;code>&amp;lt;p&amp;gt;UPDATE Sep 13 2018:&amp;lt;/p&amp;gt;
+&lt;/code>&lt;/pre>
+&lt;p>The PR has been merged and you can just install with &lt;code>pip install cmaputil&lt;/code> without having to pull the branch.&lt;/p>
+&lt;/div>
+&lt;/aside>
+&lt;p>PNNL&amp;rsquo;s &lt;code>cmaputil&lt;/code> library can be downloaded from their &lt;a class="link" href="https://github.com/pnnl/cmaputil" target="_blank" rel="noopener"
+>github&lt;/a> page or installed via &lt;code>pip install cmaputil&lt;/code>. However, for the use cases I&amp;rsquo;m showing here, that won&amp;rsquo;t quite work. &lt;a class="link" href="https://github.com/pnnl/cmaputil/pull/3" target="_blank" rel="noopener"
+>This PR&lt;/a> shows why. If that PR has been merged, or an alternative fix merged, you should be able to use the library from the source. If not, here is a quick work around:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;span class="lnt">5
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">git clone https://github.com/tdj28/cmaputil
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">git checkout -b patch-1
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">git pull
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nb">cd&lt;/span> cmaputil
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">python setup.py install
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>Assuming that works, you can now use the camputil library to use optimized Cividis colormaps.&lt;/p>
+&lt;h2 id="using-cividis">Using Cividis
+&lt;/h2>&lt;p>We would start by importing the key libraries:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="kn">import&lt;/span> &lt;span class="nn">cmaputil&lt;/span> &lt;span class="k">as&lt;/span> &lt;span class="nn">cmu&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">import&lt;/span> &lt;span class="nn">cmaputil.cvdutil&lt;/span> &lt;span class="k">as&lt;/span> &lt;span class="nn">cvu&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">import&lt;/span> &lt;span class="nn">scipy&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>Next, add the following section to your code. It modifies
+the viridis colormap that comes with matplotlib and runs
+some optimizations on it.&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;span class="lnt">16
+&lt;/span>&lt;span class="lnt">17
+&lt;/span>&lt;span class="lnt">18
+&lt;/span>&lt;span class="lnt">19
+&lt;/span>&lt;span class="lnt">20
+&lt;/span>&lt;span class="lnt">21
+&lt;/span>&lt;span class="lnt">22
+&lt;/span>&lt;span class="lnt">23
+&lt;/span>&lt;span class="lnt">24
+&lt;/span>&lt;span class="lnt">25
+&lt;/span>&lt;span class="lnt">26
+&lt;/span>&lt;span class="lnt">27
+&lt;/span>&lt;span class="lnt">28
+&lt;/span>&lt;span class="lnt">29
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Input colormap nam&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">cmap&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="s1">&amp;#39;viridis&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Optimize&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">rgb1&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">jab1&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">cmu&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">get_rgb_jab&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">cmap&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="c1"># Original colormap&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">rgb2&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">jab2&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">cmu&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">get_rgb_jab&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">cvu&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">get_cvd&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">rgb1&lt;/span>&lt;span class="p">))&lt;/span> &lt;span class="c1"># CVD colormap&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">jab3&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">cmu&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">make_linear&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">jab2&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="c1"># Uniformize hue (a&amp;#39; vs. b&amp;#39;)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">#print(jab3)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">_&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">jab4&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">cmu&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">correct_J&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">jab3&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="c1"># Linearize J&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Convert back to sRGB&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">rgb4&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">cmu&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">convert&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">jab4&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">cmu&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">CSPACE2&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">cmu&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">CSPACE1&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">rgb4&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">np&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">clip&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">rgb4&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">0&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">1&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Resimulate CVD in case corrections took the map outside CVD-safe space&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">rgb4&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">cvu&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">get_cvd&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">rgb4&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Resimulate CVD in case corrections took the map outside CVD-safe space&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">rgb4&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">cvu&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">get_cvd&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">rgb4&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">colors&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="p">[]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">for&lt;/span> &lt;span class="n">j&lt;/span> &lt;span class="ow">in&lt;/span> &lt;span class="nb">range&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nb">len&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">rgb4&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">])):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">colors&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">append&lt;/span>&lt;span class="p">(&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="n">rgb4&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">][&lt;/span>&lt;span class="n">j&lt;/span>&lt;span class="p">],&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">rgb4&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">][&lt;/span>&lt;span class="n">j&lt;/span>&lt;span class="p">],&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">rgb4&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">2&lt;/span>&lt;span class="p">][&lt;/span>&lt;span class="n">j&lt;/span>&lt;span class="p">])&lt;/span> &lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Convert to matplotlib colormap&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">cividis&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">mpl&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">colors&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">LinearSegmentedColormap&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">from_list&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s2">&amp;#34;&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">colors&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>Finally, you can easily incorporate it into your matplotlib plots as in the following example:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;span class="lnt">5
+&lt;/span>&lt;span class="lnt">6
+&lt;/span>&lt;span class="lnt">7
+&lt;/span>&lt;span class="lnt">8
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">clf&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">fig&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">figure&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">figsize&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">9&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">9&lt;/span>&lt;span class="p">))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">title&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;Cividis Heatmap&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">ylabel&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;y&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">xlabel&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;x&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">im&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">imshow&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">heatmap&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">extent&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">extent&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">cmap&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">cividis&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">origin&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;lower&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">fig&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">colorbar&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">im&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">savefig&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;Cividis Heatmap&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>We can compare the rainbow version of the above plot:&lt;/p>
+&lt;p>&lt;img src="https://tdj28.github.io/p/using-pnnls-new-cividis-colormap-in-data-science-to-make-accessible-heat-maps/assets/Cividis-heatmap-5ca3f3e1.png"
+width="1466"
+height="1498"
+srcset="https://tdj28.github.io/p/using-pnnls-new-cividis-colormap-in-data-science-to-make-accessible-heat-maps/assets/Cividis-heatmap-5ca3f3e1_hu339624234426928938.png 480w, https://tdj28.github.io/p/using-pnnls-new-cividis-colormap-in-data-science-to-make-accessible-heat-maps/assets/Cividis-heatmap-5ca3f3e1_hu6167471651917033608.png 1024w"
+loading="lazy"
+alt="rainbow version"
+class="gallery-image"
+data-flex-grow="97"
+data-flex-basis="234px"
+>&lt;/p>
+&lt;p>with the Cividis version:&lt;/p>
+&lt;p>&lt;img src="https://tdj28.github.io/p/using-pnnls-new-cividis-colormap-in-data-science-to-make-accessible-heat-maps/assets/Cividis-heatmap-69d2bb6c.png"
+width="1482"
+height="1496"
+srcset="https://tdj28.github.io/p/using-pnnls-new-cividis-colormap-in-data-science-to-make-accessible-heat-maps/assets/Cividis-heatmap-69d2bb6c_hu18035002315465264661.png 480w, https://tdj28.github.io/p/using-pnnls-new-cividis-colormap-in-data-science-to-make-accessible-heat-maps/assets/Cividis-heatmap-69d2bb6c_hu5879199578886571484.png 1024w"
+loading="lazy"
+alt="civids version"
+class="gallery-image"
+data-flex-grow="99"
+data-flex-basis="237px"
+>&lt;/p>
+&lt;p>It certainly may be a matter of preference for most folks. I find the Cividis version more appealing, for example, because although the dark reds pop to me and pinpoint &amp;ldquo;hot spots&amp;rdquo; perhaps a little more quickly, they appear to be almost detached from the rest of the heat blob. In the Cividis mapping, as in other mappings which have only two colors, the spectrum is clearer. Given that using Cividis ensures that any color blind readers will be getting the same information as I see seals the deal for me and makes Cividis my go to choice for colormaps going forward.&lt;/p>
+&lt;h2 id="conclusions">Conclusions
+&lt;/h2>&lt;ul>
+&lt;li>
+&lt;p>Cividis is an optimized version of the viridis colormap which optimizes for both the ability to discern patterns for those with normal vision and the ability of the color blind to see the exact same thing.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Cividis works in Python and they also have an R library. This quick blog note shows how to use it &lt;em>right now&lt;/em>, but I anticipate and hope that it will become obsolete and matplotlib will incorporate Cividis and PNNL&amp;rsquo;s work on this. COMSOL Multiphysics, a finite element analysis software package, for example, will be doing so.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>You can find a standalone python script which I used to create these plots using Cividis &lt;a class="link" href="https://github.com/3implieschaos/various/blob/master/2018/20180819/heatmap.py" target="_blank" rel="noopener"
+>here&lt;/a>&lt;/p>
+&lt;/li>
+&lt;/ul></description></item><item><title>Exploring Wikipedia Page Count Trends</title><link>https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/</link><pubDate>Sun, 05 Aug 2018 19:21:05 -0700</pubDate><guid>https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/</guid><description>&lt;h1 id="exploring-wikipedia-page-counts-via-additive-models-for-seasonality-decomposition">Exploring Wikipedia page counts via additive models for seasonality decomposition
+&lt;/h1>&lt;h2 id="introduction">Introduction
+&lt;/h2>&lt;p>Wikipedia, in addition to being quite valuable as a &lt;em>starting&lt;/em> point for many student essays (as somebody who has spent time in front of the classroom, I can&amp;rsquo;t emphasize the word &lt;em>starting&lt;/em> enough here), can provide some sociological insight by providing page count hits. In this brief blog entry, we will explore two python-ready implementations of additive models for seasonality decomposition in the context of the following topic:&lt;/p>
+&lt;ul>
+&lt;li>Is there any seasonality with wikipedia page hits? For this question, we will look at a few keywords which we think are quite often used by school students in researching for common essay questions (e.g. Abraham_Lincoln) and other keywords which are less likely to be commonly used by students for essays at any level, for example, the American telecommunications company Sprint.&lt;/li>
+&lt;/ul>
+&lt;p>This blog entry is posted in the form of a Jupyter Notebook so that readers can recreate the findings and pursue further questions more easily.&lt;/p>
+&lt;p>We use two &lt;em>additive model&lt;/em> implementations, one from a library called &lt;a class="link" href="https://www.statsmodels.org/stable/index.html" target="_blank" rel="noopener"
+>statsmodel&lt;/a> and another from a library developed by Facebook called &lt;a class="link" href="https://facebook.github.io/prophet/" target="_blank" rel="noopener"
+>prophet&lt;/a>.&lt;/p>
+&lt;h2 id="additive-models-for-seasonality-decomposition-a-quick-primer">Additive models for seasonality decomposition, a quick primer
+&lt;/h2>&lt;p>Let&amp;rsquo;s begin by creating a artificial time series.&lt;/p>
+&lt;p>Before importing pandas, numpy, etc., I want to turn off some typical warnings that we see from these libraries. This is just to keep the output looking clean for presentation purposes.&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="kn">import&lt;/span> &lt;span class="nn">warnings&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">warnings&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">filterwarnings&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s2">&amp;#34;ignore&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">message&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s2">&amp;#34;numpy.dtype size changed&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">warnings&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">filterwarnings&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s2">&amp;#34;ignore&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">message&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s2">&amp;#34;numpy.ufunc size changed&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">warnings&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">filterwarnings&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s2">&amp;#34;ignore&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="n">category&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="ne">FutureWarning&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>Next, we import all of the great Python libraries. Here, for seasonal decomposition we are using statsmodel and Facebook&amp;rsquo;s Prophet.&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="kn">import&lt;/span> &lt;span class="nn">pandas&lt;/span> &lt;span class="k">as&lt;/span> &lt;span class="nn">pd&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">import&lt;/span> &lt;span class="nn">numpy&lt;/span> &lt;span class="k">as&lt;/span> &lt;span class="nn">np&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">import&lt;/span> &lt;span class="nn">matplotlib.pylab&lt;/span> &lt;span class="k">as&lt;/span> &lt;span class="nn">plt&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">import&lt;/span> &lt;span class="nn">datetime&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="o">%&lt;/span>&lt;span class="n">matplotlib&lt;/span> &lt;span class="n">inline&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">from&lt;/span> &lt;span class="nn">matplotlib.pylab&lt;/span> &lt;span class="kn">import&lt;/span> &lt;span class="n">rcParams&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">import&lt;/span> &lt;span class="nn">seaborn&lt;/span> &lt;span class="k">as&lt;/span> &lt;span class="nn">sns&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">from&lt;/span> &lt;span class="nn">statsmodels.tsa.stattools&lt;/span> &lt;span class="kn">import&lt;/span> &lt;span class="n">adfuller&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">from&lt;/span> &lt;span class="nn">statsmodels.tsa.seasonal&lt;/span> &lt;span class="kn">import&lt;/span> &lt;span class="n">seasonal_decompose&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">from&lt;/span> &lt;span class="nn">fbprophet&lt;/span> &lt;span class="kn">import&lt;/span> &lt;span class="n">Prophet&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">rcParams&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;figure.figsize&amp;#39;&lt;/span>&lt;span class="p">]&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="mi">16&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">7&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>Next, let&amp;rsquo;s create a fake data set.&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;span class="lnt">5
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="n">entries&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="mi">365&lt;/span> &lt;span class="o">*&lt;/span> &lt;span class="mi">2&lt;/span> &lt;span class="c1"># Two years worth of days&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">df&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">pd&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">DataFrame&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">np&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">random&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">randn&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">entries&lt;/span>&lt;span class="p">))&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">cumsum&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">df&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">head&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">plot&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">df&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">tolist&lt;/span>&lt;span class="p">())&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">show&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>&lt;img src="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_7_0.png"
+width="938"
+height="415"
+srcset="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_7_0_hu6320986420673344421.png 480w, https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_7_0_hu12934238345635945047.png 1024w"
+loading="lazy"
+alt="png"
+class="gallery-image"
+data-flex-grow="226"
+data-flex-basis="542px"
+>&lt;/p>
+&lt;p>Our brains have pattern-matching algorithms trained over billions of years, so even though the above data set is a random walk, we may see patterns there anyway. If we run it again, those patterns will change even though we were using the exact same algorithm to generate them. This of course doesn&amp;rsquo;t imply that finding patterns in data is an empty task, there is very often patterns that are legitimate. The point here is to show how the additive model works by throwing something known to be random at it. Just to show, again, how entirely random the generated dataset is, let&amp;rsquo;s throw a bunch in the same graph:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;span class="lnt">5
+&lt;/span>&lt;span class="lnt">6
+&lt;/span>&lt;span class="lnt">7
+&lt;/span>&lt;span class="lnt">8
+&lt;/span>&lt;span class="lnt">9
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="k">def&lt;/span> &lt;span class="nf">rwts&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">entries&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mi">100&lt;/span>&lt;span class="p">):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">_df&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">pd&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">DataFrame&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">np&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">random&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">randn&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">entries&lt;/span>&lt;span class="p">))&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">cumsum&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">start&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">datetime&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">datetime&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">strptime&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s2">&amp;#34;20160101&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s2">&amp;#34;%Y&lt;/span>&lt;span class="si">%d&lt;/span>&lt;span class="s2">%m&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">dates_generated&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="p">[&lt;/span>&lt;span class="n">start&lt;/span> &lt;span class="o">+&lt;/span> &lt;span class="n">datetime&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">timedelta&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">days&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">x&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="k">for&lt;/span> &lt;span class="n">x&lt;/span> &lt;span class="ow">in&lt;/span> &lt;span class="nb">range&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">entries&lt;/span>&lt;span class="p">)]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">dtse&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">pd&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">Series&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">dates_generated&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">_df&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;ds&amp;#39;&lt;/span>&lt;span class="p">]&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">dtse&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">_df&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">_df&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">rename&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">columns&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="s2">&amp;#34;y&amp;#34;&lt;/span>&lt;span class="p">})&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">_df&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">index&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">_df&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;ds&amp;#39;&lt;/span>&lt;span class="p">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">return&lt;/span> &lt;span class="n">_df&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;span class="lnt">5
+&lt;/span>&lt;span class="lnt">6
+&lt;/span>&lt;span class="lnt">7
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="n">entries&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="mi">365&lt;/span> &lt;span class="o">*&lt;/span> &lt;span class="mi">2&lt;/span> &lt;span class="c1"># Two years worth of days&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">rwdf&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="p">[]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">for&lt;/span> &lt;span class="n">i&lt;/span> &lt;span class="ow">in&lt;/span> &lt;span class="nb">range&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">10&lt;/span>&lt;span class="p">):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">rwdf&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">append&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">rwts&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">entries&lt;/span>&lt;span class="p">))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">plot&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">rwdf&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">i&lt;/span>&lt;span class="p">][&lt;/span>&lt;span class="s1">&amp;#39;y&amp;#39;&lt;/span>&lt;span class="p">])&lt;/span> &lt;span class="c1">#.tolist())&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">show&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>&lt;img src="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_10_0.png"
+width="938"
+height="415"
+srcset="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_10_0_hu515019636592041744.png 480w, https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_10_0_hu5174324964489720936.png 1024w"
+loading="lazy"
+alt="png"
+class="gallery-image"
+data-flex-grow="226"
+data-flex-basis="542px"
+>&lt;/p>
+&lt;p>Next, let&amp;rsquo;s see what happens when we apply the statsmodel implementation of the additive model to a random walk dataset:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;span class="lnt">16
+&lt;/span>&lt;span class="lnt">17
+&lt;/span>&lt;span class="lnt">18
+&lt;/span>&lt;span class="lnt">19
+&lt;/span>&lt;span class="lnt">20
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="k">def&lt;/span> &lt;span class="nf">additive_seasonal_plot&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">_df&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">frequency&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mi">365&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">title&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s2">&amp;#34;I forgot to tinclude a title.&amp;#34;&lt;/span>&lt;span class="p">):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">fig&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">ax&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">subplots&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">title&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">title&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">decompositionm&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">seasonal_decompose&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">_df&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">freq&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">frequency&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">model&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;additive&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">trendm&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">decompositionm&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">trend&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">seasonalm&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">decompositionm&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">seasonal&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">residualm&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">decompositionm&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">resid&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">subplot&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">411&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">plot&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">_df&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">label&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;Original&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">legend&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">loc&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;best&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">subplot&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">412&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">plot&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">trendm&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">label&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;Trend&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">legend&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">loc&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;best&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">subplot&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">413&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">plot&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">seasonalm&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="n">label&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;Seasonality&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">legend&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">loc&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;best&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">subplot&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">414&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">plot&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">residualm&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">label&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;Residuals&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">legend&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">loc&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;best&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">tight_layout&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="n">additive_seasonal_plot&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">rwts&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">365&lt;/span>&lt;span class="o">*&lt;/span>&lt;span class="mi">2&lt;/span>&lt;span class="p">)[&lt;/span>&lt;span class="s1">&amp;#39;y&amp;#39;&lt;/span>&lt;span class="p">],&lt;/span> &lt;span class="n">frequency&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mi">365&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">title&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s2">&amp;#34;Random Walk&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>&lt;img src="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_13_0.png"
+width="1144"
+height="496"
+srcset="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_13_0_hu10247107503224196402.png 480w, https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_13_0_hu13280983473169103292.png 1024w"
+loading="lazy"
+alt="png"
+class="gallery-image"
+data-flex-grow="230"
+data-flex-basis="553px"
+>&lt;/p>
+&lt;p>Now let&amp;rsquo;s try that with Prophet:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;span class="lnt">5
+&lt;/span>&lt;span class="lnt">6
+&lt;/span>&lt;span class="lnt">7
+&lt;/span>&lt;span class="lnt">8
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="k">def&lt;/span> &lt;span class="nf">prophet_seasonal_plot&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">_df&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">frequency&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mi">365&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">mytitle&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s2">&amp;#34;I forgot to tinclude a title.&amp;#34;&lt;/span>&lt;span class="p">):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">_m&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">Prophet&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">yearly_seasonality&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="kc">True&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">daily_seasonality&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="kc">False&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">weekly_seasonality&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="kc">True&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">mcmc_samples&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="mi">0&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">seasonality_prior_scale&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mi">50&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">_df&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;y&amp;#39;&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">plot&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">title&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">mytitle&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">_m&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">fit&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">_df&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">_future&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">_m&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">make_future_dataframe&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">periods&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mi">365&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">_forecast&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">_m&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">predict&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">future&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">_m&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">plot_components&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">_forecast&lt;/span>&lt;span class="p">);&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">_m&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">plot&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">_forecast&lt;/span>&lt;span class="p">);&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="n">prophet_seasonal_plot&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">rwts&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">365&lt;/span>&lt;span class="o">*&lt;/span>&lt;span class="mi">2&lt;/span>&lt;span class="p">),&lt;/span> &lt;span class="n">frequency&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mi">365&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">mytitle&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s2">&amp;#34;Random Walk&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>&lt;img src="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_16_0.png"
+width="938"
+height="453"
+srcset="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_16_0_hu7129137000648543187.png 480w, https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_16_0_hu934392256254631689.png 1024w"
+loading="lazy"
+alt="png"
+class="gallery-image"
+data-flex-grow="207"
+data-flex-basis="496px"
+>&lt;/p>
+&lt;p>&lt;img src="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_16_1.png"
+width="640"
+height="640"
+srcset="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_16_1_hu9931341670711957581.png 480w, https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_16_1_hu11731304441509287279.png 1024w"
+loading="lazy"
+alt="png"
+class="gallery-image"
+data-flex-grow="100"
+data-flex-basis="240px"
+>&lt;/p>
+&lt;p>&lt;img src="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_16_2.png"
+width="712"
+height="424"
+srcset="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_16_2_hu1588946172753811943.png 480w, https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_16_2_hu17788978990119481240.png 1024w"
+loading="lazy"
+alt="png"
+class="gallery-image"
+data-flex-grow="167"
+data-flex-basis="403px"
+>&lt;/p>
+&lt;p>Prophet makes nicer graphs out of the box, for sure. It also has a nice way to show uncertainty. And looking at the above, you might very well believe that indeed we have found some sort of phenomenon that seems to peak in late winter and spring, and on Thursday for some reason. It would be a pretty safe bet to bet that the above trend would peak in the months following the last dataset we have, right? Wrong, of course, because as you know, this dataset was generated entirely randomly. The lesson here is not that this method for modeling seasonality and forecasting is wrong, as indeed they work exactly as they are designed to, but instead that we need to be quite careful not to so readily believe what they say. This is the giant grain of salt I&amp;rsquo;m putting on your plate before getting to the fun stuff.&lt;/p>
+&lt;p>To make this point entirely visual, let&amp;rsquo;s do the same analysis as above, but instead of just using two years worth of fake data, let&amp;rsquo;s create three years, but only feed the additive model two years, and see how it does in the third year.&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="n">df1&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">rwts&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">365&lt;/span>&lt;span class="o">*&lt;/span>&lt;span class="mi">3&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">mask1&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="n">df1&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;ds&amp;#39;&lt;/span>&lt;span class="p">]&lt;/span> &lt;span class="o">&amp;gt;=&lt;/span> &lt;span class="s1">&amp;#39;20160101&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="o">&amp;amp;&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="n">df1&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;ds&amp;#39;&lt;/span>&lt;span class="p">]&lt;/span> &lt;span class="o">&amp;lt;&lt;/span> &lt;span class="s1">&amp;#39;20180101&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">df2&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">df1&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">loc&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">mask1&lt;/span>&lt;span class="p">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">mask2&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="n">df1&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;ds&amp;#39;&lt;/span>&lt;span class="p">]&lt;/span> &lt;span class="o">&amp;gt;=&lt;/span> &lt;span class="s1">&amp;#39;20180101&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="o">&amp;amp;&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="n">df1&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;ds&amp;#39;&lt;/span>&lt;span class="p">]&lt;/span> &lt;span class="o">&amp;lt;&lt;/span> &lt;span class="s1">&amp;#39;20190101&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">df3&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">df1&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">loc&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">mask2&lt;/span>&lt;span class="p">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">_m&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">Prophet&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">yearly_seasonality&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="kc">True&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">daily_seasonality&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="kc">False&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">weekly_seasonality&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="kc">True&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">mcmc_samples&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="mi">0&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">seasonality_prior_scale&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mi">50&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">_m&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">fit&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">df2&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">_future&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">_m&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">make_future_dataframe&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">periods&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mi">365&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">_forecast&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">_m&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">predict&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">future&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">_m&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">plot&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">_forecast&lt;/span>&lt;span class="p">);&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>&lt;img src="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_18_0.png"
+width="712"
+height="424"
+srcset="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_18_0_hu14830363113800810005.png 480w, https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_18_0_hu10218377054246143012.png 1024w"
+loading="lazy"
+alt="png"
+class="gallery-image"
+data-flex-grow="167"
+data-flex-basis="403px"
+>&lt;/p>
+&lt;p>That looks great, that stock is about to go up like crazy, let&amp;rsquo;s dump our entire life-savings into that stock!&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="n">_m&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">plot&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">_forecast&lt;/span>&lt;span class="p">);&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">df3&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;y&amp;#39;&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">plot&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">color&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;Red&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;pre>&lt;code>&amp;lt;matplotlib.axes._subplots.AxesSubplot at 0x7f7fbe8d1048&amp;gt;
+&lt;/code>&lt;/pre>
+&lt;p>&lt;img src="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_20_1.png"
+width="712"
+height="399"
+srcset="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_20_1_hu15388761876393223685.png 480w, https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_20_1_hu5558415048064266838.png 1024w"
+loading="lazy"
+alt="png"
+class="gallery-image"
+data-flex-grow="178"
+data-flex-basis="428px"
+>&lt;/p>
+&lt;p>Oops.&lt;/p>
+&lt;h2 id="wikipedia-page-hit-stats">Wikipedia Page hit stats
+&lt;/h2>&lt;p>Previously, in order to get a nice way to access Wikipedia page hit data, I would have suggsted the R library wikipediatrend. The situation has evolved such that wikipediatrend is not functional (see &lt;a class="link" href="https://github.com/petermeissner/wikipediatrend/issues/32" target="_blank" rel="noopener"
+>this link for more details&lt;/a>). Fortunately, Wikimedia themselves have released an api that has a &lt;a class="link" href="https://github.com/mediawiki-utilities/python-mwviews" target="_blank" rel="noopener"
+>python library&lt;/a>.&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="kn">from&lt;/span> &lt;span class="nn">mwviews.api&lt;/span> &lt;span class="kn">import&lt;/span> &lt;span class="n">PageviewsClient&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">p&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">PageviewsClient&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;blog&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>Although there is a &lt;a class="link" href="https://dumps.wikimedia.org/other/pagecounts-raw/" target="_blank" rel="noopener"
+>repository&lt;/a> of old pageviews pre-dating July 2015, the API only provides dates from July 2015 forward. Let&amp;rsquo;s get three years worth of data from July 2015 to July 2018. The following command outputs a dictionary with items of the form:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-fallback" data-lang="fallback">&lt;span class="line">&lt;span class="cl"> datetime.datetime(2015, 12, 21, 0, 0): {&amp;#39;Lincoln&amp;#39;: 503},
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>when we make a call to extract page hit counts for the topic &amp;lsquo;Abraham Lincoln&amp;rsquo;.&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="n">dictLincoln&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">p&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">article_views&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;en.wikipedia&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;Abraham Lincoln&amp;#39;&lt;/span>&lt;span class="p">],&lt;/span> &lt;span class="n">granularity&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;daily&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">start&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;20150701&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">end&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;20180701&amp;#39;&lt;/span>&lt;span class="p">);&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="n">dfLincoln&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">pd&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">DataFrame&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">from_dict&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">dictLincoln&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">transpose&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="n">dfLincoln&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">index&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">pd&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">to_datetime&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">dfLincoln&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">index&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">dfLincoln&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">dfLincoln&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">rename&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">columns&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="s2">&amp;#34;Abraham_Lincoln&amp;#34;&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="s2">&amp;#34;Daily Page Counts&amp;#34;&lt;/span>&lt;span class="p">})&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">dfLincoln&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">head&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;div>
+&lt;style scoped>
+.dataframe tbody tr th:only-of-type {
+vertical-align: middle;
+}
+&lt;pre>&lt;code>.dataframe tbody tr th {
+vertical-align: top;
+}
+.dataframe thead th {
+text-align: right;
+}
+&lt;/code>&lt;/pre>
+&lt;p>&lt;/style>&lt;/p>
+&lt;table border="1" class="dataframe">
+&lt;thead>
+&lt;tr style="text-align: right;">
+&lt;th>&lt;/th>
+&lt;th>Daily Page Counts&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;th>2015-07-01&lt;/th>
+&lt;td>15223&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;th>2015-07-02&lt;/th>
+&lt;td>15137&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;th>2015-07-03&lt;/th>
+&lt;td>17291&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;th>2015-07-04&lt;/th>
+&lt;td>19697&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;th>2015-07-05&lt;/th>
+&lt;td>18149&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;/div>
+&lt;p>Do we see any trends just by glancing at the plot of these page hits over the three year period from July 2015 to July 2018? Initially we may see a few, such as that the page hits seem to go up after January, and have some unusual peaks in late 2016 and early 2017 (very likely, and precisely as we will see later, related to the election and inauguration of that period).&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="n">dfLincoln&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">plot&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">title&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s2">&amp;#34;Abraham Lincoln Wiki Page Hits&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;pre>&lt;code>&amp;lt;matplotlib.axes._subplots.AxesSubplot at 0x7f7fc8603a90&amp;gt;
+&lt;/code>&lt;/pre>
+&lt;p>&lt;img src="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_29_1.png"
+width="949"
+height="439"
+srcset="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_29_1_hu8571237364022576187.png 480w, https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_29_1_hu10775955412992444658.png 1024w"
+loading="lazy"
+alt="png"
+class="gallery-image"
+data-flex-grow="216"
+data-flex-basis="518px"
+>&lt;/p>
+&lt;p>In fact, let&amp;rsquo;s plot key dates on that plot, such as the US election of 2016, inauguration of 2017, President&amp;rsquo;s Day holidays, and the 4th of July. These key dates explain almost all of the spikes.&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;span class="lnt">5
+&lt;/span>&lt;span class="lnt">6
+&lt;/span>&lt;span class="lnt">7
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="n">ax&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">dfLincoln&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">plot&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">title&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s2">&amp;#34;Abraham Lincoln Wiki Page Hits + Key dates&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">linewidth&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mf">3.0&lt;/span>&lt;span class="p">);&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">important_dates&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;2016-11-08&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;2017-01-20&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;2016-02-15&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;2017-02-20&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;2018-02-19&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s1">&amp;#39;2015-07-04&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;2016-07-04&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;2017-07-04&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;2018-07-04&amp;#39;&lt;/span>&lt;span class="p">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">for&lt;/span> &lt;span class="n">xc&lt;/span> &lt;span class="ow">in&lt;/span> &lt;span class="n">important_dates&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">axvline&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">x&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">xc&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">color&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;k&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">linestyle&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;--&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">ax&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">set_xlim&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">pd&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">Timestamp&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;2016-01-01&amp;#39;&lt;/span>&lt;span class="p">),&lt;/span> &lt;span class="n">pd&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">Timestamp&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;2018-03-01&amp;#39;&lt;/span>&lt;span class="p">))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">ax&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">set_ylim&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">90000&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;pre>&lt;code>(0, 90000)
+&lt;/code>&lt;/pre>
+&lt;p>&lt;img src="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_31_1.png"
+width="949"
+height="439"
+srcset="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_31_1_hu2425904607623869488.png 480w, https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_31_1_hu5200824809977631398.png 1024w"
+loading="lazy"
+alt="png"
+class="gallery-image"
+data-flex-grow="216"
+data-flex-basis="518px"
+>&lt;/p>
+&lt;p>Next we apply statsmodel&amp;rsquo;s implementation of the additive model for seasonal decomposition:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;span class="lnt">16
+&lt;/span>&lt;span class="lnt">17
+&lt;/span>&lt;span class="lnt">18
+&lt;/span>&lt;span class="lnt">19
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="n">fig&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">ax&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">subplots&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">title&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;Seasonal trend for Wiki Page Counts: Abraham Lincoln&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">decompositionm&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">seasonal_decompose&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">dfLincoln&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">freq&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mi">365&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">model&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;additive&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">trendm&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">decompositionm&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">trend&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">seasonalm&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">decompositionm&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">seasonal&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">residualm&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">decompositionm&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">resid&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">subplot&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">411&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">plot&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">dfLincoln&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">label&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;Original&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">legend&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">loc&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;best&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">subplot&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">412&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">plot&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">trendm&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">label&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;Trend&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">legend&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">loc&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;best&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">subplot&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">413&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">plot&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">seasonalm&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="n">label&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;Seasonality&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">legend&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">loc&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;best&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">subplot&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">414&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">plot&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">residualm&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">label&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;Residuals&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">legend&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">loc&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;best&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">tight_layout&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>&lt;img src="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_33_0.png"
+width="1144"
+height="496"
+srcset="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_33_0_hu13031249686203605896.png 480w, https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_33_0_hu18241827231963617056.png 1024w"
+loading="lazy"
+alt="png"
+class="gallery-image"
+data-flex-grow="230"
+data-flex-basis="553px"
+>&lt;/p>
+&lt;p>This model has identified a trend increase in election year 2016, which seems to make sense. However, it overfit the spike seen around election day 2016, and we can see the result of that overfit in the residuals which dip extremely a year before and after election day. In a future blog post, we will look at working around this by marking the key dates as holidays so that the algorithm doesn&amp;rsquo;t overfit those days. The seasonality trend has also found something pretty expected, which is that hits on that page seem to breathe with the typical American school year. That is, we can see in the seasonal trends that there are many students using Wikipedia (hopefully as a starting point and not a primary resource) for essay papers and homework answers on Abraham Lincoln.&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="n">ax&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">seasonalm&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">plot&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">title&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s2">&amp;#34;Abraham Lincoln Wiki Page Hits Seasonal Trend + Key dates + Shaded School Year&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">linewidth&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mf">3.0&lt;/span>&lt;span class="p">);&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">important_dates&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;2016-11-08&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;2017-01-20&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;2016-02-15&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;2017-02-20&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;2018-02-19&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s1">&amp;#39;2015-12-25&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;2016-12-25&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;2017-12-25&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s1">&amp;#39;2015-07-04&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;2016-07-04&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;2017-07-04&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;2018-07-04&amp;#39;&lt;/span>&lt;span class="p">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">for&lt;/span> &lt;span class="n">xc&lt;/span> &lt;span class="ow">in&lt;/span> &lt;span class="n">important_dates&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">ax&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">axvline&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">x&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">xc&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">color&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;k&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">linestyle&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;--&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">ax&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">axvspan&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">pd&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">Timestamp&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;2015-09-01&amp;#39;&lt;/span>&lt;span class="p">),&lt;/span> &lt;span class="n">pd&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">Timestamp&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;2016-06-01&amp;#39;&lt;/span>&lt;span class="p">),&lt;/span> &lt;span class="n">facecolor&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;g&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">alpha&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mf">0.3&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">ax&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">axvspan&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">pd&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">Timestamp&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;2016-09-01&amp;#39;&lt;/span>&lt;span class="p">),&lt;/span> &lt;span class="n">pd&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">Timestamp&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;2017-06-01&amp;#39;&lt;/span>&lt;span class="p">),&lt;/span> &lt;span class="n">facecolor&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;g&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">alpha&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mf">0.3&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">ax&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">axvspan&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">pd&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">Timestamp&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;2017-09-01&amp;#39;&lt;/span>&lt;span class="p">),&lt;/span> &lt;span class="n">pd&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">Timestamp&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;2018-06-01&amp;#39;&lt;/span>&lt;span class="p">),&lt;/span> &lt;span class="n">facecolor&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;g&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">alpha&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mf">0.3&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">ax&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">set_xlim&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">pd&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">Timestamp&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;2015-07-01&amp;#39;&lt;/span>&lt;span class="p">),&lt;/span> &lt;span class="n">pd&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">Timestamp&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;2018-03-01&amp;#39;&lt;/span>&lt;span class="p">))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">ax&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">set_ylim&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="mi">10000&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">40000&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;pre>&lt;code>(-10000, 40000)
+&lt;/code>&lt;/pre>
+&lt;p>&lt;img src="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_35_1.png"
+width="957"
+height="439"
+srcset="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_35_1_hu14800540357833563139.png 480w, https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_35_1_hu15053667681378750235.png 1024w"
+loading="lazy"
+alt="png"
+class="gallery-image"
+data-flex-grow="217"
+data-flex-basis="523px"
+>&lt;/p>
+&lt;p>Zooming in on the residuals, we see again how the overfitting to the special events (election and inauguration) hurt the accuracy of the models.&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;span class="lnt">5
+&lt;/span>&lt;span class="lnt">6
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="n">ax&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">residualm&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">plot&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">title&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s2">&amp;#34;Abraham Lincoln Wiki Page Hits Seasonal Residuals + Key dates&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">linewidth&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mf">3.0&lt;/span>&lt;span class="p">);&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">important_dates&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="p">[&lt;/span> &lt;span class="s1">&amp;#39;2016-01-20&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;2016-11-08&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;2017-01-20&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;2017-11-08&amp;#39;&lt;/span>&lt;span class="p">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">for&lt;/span> &lt;span class="n">xc&lt;/span> &lt;span class="ow">in&lt;/span> &lt;span class="n">important_dates&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">ax&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">axvline&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">x&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">xc&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">color&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;k&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">linestyle&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;--&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">ax&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">set_xlim&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">pd&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">Timestamp&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;2015-12-01&amp;#39;&lt;/span>&lt;span class="p">),&lt;/span> &lt;span class="n">pd&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">Timestamp&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;2018-02-01&amp;#39;&lt;/span>&lt;span class="p">))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">ax&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">set_ylim&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="mi">40000&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">40000&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;pre>&lt;code>(-40000, 40000)
+&lt;/code>&lt;/pre>
+&lt;p>&lt;img src="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_37_1.png"
+width="957"
+height="439"
+srcset="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_37_1_hu8192794030668203439.png 480w, https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_37_1_hu3508457951293339452.png 1024w"
+loading="lazy"
+alt="png"
+class="gallery-image"
+data-flex-grow="217"
+data-flex-basis="523px"
+>&lt;/p>
+&lt;p>Now we have stated a hypothesis without backing it up, namely that the seasonality over the year in page hits for the Wikipedia entry for Abraham Lincoln reflects the patterns of the American school year. This is pretty impossible to prove without data that is impossible or not practical to obtain, namely we would have to have the IP addresses of all those page hits and tie those in to schools and households with students, etc. Never going to happen. But we can strengthen our confidence in our hypothesis by testing it in the negative, that is, what will we see if we pick a topic which we do &lt;em>not&lt;/em> expect to be tied to school-year patterns, a topic students would rarely ever look up for school work? Let&amp;rsquo;s try the American telecom Sprint.&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;span class="lnt">16
+&lt;/span>&lt;span class="lnt">17
+&lt;/span>&lt;span class="lnt">18
+&lt;/span>&lt;span class="lnt">19
+&lt;/span>&lt;span class="lnt">20
+&lt;/span>&lt;span class="lnt">21
+&lt;/span>&lt;span class="lnt">22
+&lt;/span>&lt;span class="lnt">23
+&lt;/span>&lt;span class="lnt">24
+&lt;/span>&lt;span class="lnt">25
+&lt;/span>&lt;span class="lnt">26
+&lt;/span>&lt;span class="lnt">27
+&lt;/span>&lt;span class="lnt">28
+&lt;/span>&lt;span class="lnt">29
+&lt;/span>&lt;span class="lnt">30
+&lt;/span>&lt;span class="lnt">31
+&lt;/span>&lt;span class="lnt">32
+&lt;/span>&lt;span class="lnt">33
+&lt;/span>&lt;span class="lnt">34
+&lt;/span>&lt;span class="lnt">35
+&lt;/span>&lt;span class="lnt">36
+&lt;/span>&lt;span class="lnt">37
+&lt;/span>&lt;span class="lnt">38
+&lt;/span>&lt;span class="lnt">39
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="k">def&lt;/span> &lt;span class="nf">get_wiki_df&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">topic&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">ymin&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">ymax&lt;/span>&lt;span class="p">):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">_dict&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">p&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">article_views&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;en.wikipedia&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="p">[&lt;/span>&lt;span class="n">topic&lt;/span>&lt;span class="p">],&lt;/span> &lt;span class="n">granularity&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;daily&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">start&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;20150701&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">end&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;20180701&amp;#39;&lt;/span>&lt;span class="p">);&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">_df&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">pd&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">DataFrame&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">from_dict&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">_dict&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">transpose&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">_df&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">index&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">pd&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">to_datetime&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">_df&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">index&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">_df&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">_df&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">rename&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">columns&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="n">topic&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="s2">&amp;#34;Daily Page Counts&amp;#34;&lt;/span>&lt;span class="p">})&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">ax&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">_df&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">plot&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">title&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s2">&amp;#34;&lt;/span>&lt;span class="si">{}&lt;/span>&lt;span class="s2"> Wiki Page Hits + Key dates + Shaded School Year&amp;#34;&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">format&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">topic&lt;/span>&lt;span class="p">),&lt;/span> &lt;span class="n">linewidth&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mf">3.0&lt;/span>&lt;span class="p">);&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">important_dates&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;2016-11-08&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;2017-01-20&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;2016-02-15&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;2017-02-20&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;2018-02-19&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s1">&amp;#39;2015-12-25&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;2016-12-25&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;2017-12-25&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s1">&amp;#39;2015-07-04&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;2016-07-04&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;2017-07-04&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;2018-07-04&amp;#39;&lt;/span>&lt;span class="p">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">for&lt;/span> &lt;span class="n">xc&lt;/span> &lt;span class="ow">in&lt;/span> &lt;span class="n">important_dates&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">ax&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">axvline&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">x&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">xc&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">color&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;k&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">linestyle&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;--&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">ax&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">axvspan&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">pd&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">Timestamp&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;2015-09-01&amp;#39;&lt;/span>&lt;span class="p">),&lt;/span> &lt;span class="n">pd&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">Timestamp&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;2016-06-01&amp;#39;&lt;/span>&lt;span class="p">),&lt;/span> &lt;span class="n">facecolor&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;g&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">alpha&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mf">0.3&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">ax&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">axvspan&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">pd&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">Timestamp&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;2016-09-01&amp;#39;&lt;/span>&lt;span class="p">),&lt;/span> &lt;span class="n">pd&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">Timestamp&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;2017-06-01&amp;#39;&lt;/span>&lt;span class="p">),&lt;/span> &lt;span class="n">facecolor&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;g&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">alpha&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mf">0.3&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">ax&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">axvspan&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">pd&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">Timestamp&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;2017-09-01&amp;#39;&lt;/span>&lt;span class="p">),&lt;/span> &lt;span class="n">pd&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">Timestamp&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;2018-06-01&amp;#39;&lt;/span>&lt;span class="p">),&lt;/span> &lt;span class="n">facecolor&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;g&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">alpha&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mf">0.3&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">ax&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">set_xlim&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">pd&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">Timestamp&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;2015-07-01&amp;#39;&lt;/span>&lt;span class="p">),&lt;/span> &lt;span class="n">pd&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">Timestamp&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;2018-03-01&amp;#39;&lt;/span>&lt;span class="p">))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">ax&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">set_ylim&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">ymin&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">ymax&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">return&lt;/span> &lt;span class="n">_df&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">def&lt;/span> &lt;span class="nf">get_wiki_seasonal&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">topic&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">ymin&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">ymax&lt;/span>&lt;span class="p">):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">_dict&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">p&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">article_views&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;en.wikipedia&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="p">[&lt;/span>&lt;span class="n">topic&lt;/span>&lt;span class="p">],&lt;/span> &lt;span class="n">granularity&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;daily&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">start&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;20150701&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">end&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;20180701&amp;#39;&lt;/span>&lt;span class="p">);&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">_df&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">pd&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">DataFrame&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">from_dict&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">_dict&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">transpose&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">_df&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">index&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">pd&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">to_datetime&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">_df&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">index&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">_df&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">_df&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">rename&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">columns&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="n">topic&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="s2">&amp;#34;Daily Page Counts&amp;#34;&lt;/span>&lt;span class="p">})&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">decompositionm&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">seasonal_decompose&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">_df&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">freq&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mi">365&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">model&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;additive&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">seasonalm&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">decompositionm&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">seasonal&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">ax&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">seasonalm&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">plot&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">title&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s2">&amp;#34;&lt;/span>&lt;span class="si">{}&lt;/span>&lt;span class="s2"> Wiki Page Hits Seasonal Trend + Key dates + Shaded School Year&amp;#34;&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">format&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">topic&lt;/span>&lt;span class="p">),&lt;/span> &lt;span class="n">linewidth&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mf">3.0&lt;/span>&lt;span class="p">);&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">important_dates&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;2016-11-08&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;2017-01-20&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;2016-02-15&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;2017-02-20&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;2018-02-19&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s1">&amp;#39;2015-12-25&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;2016-12-25&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;2017-12-25&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s1">&amp;#39;2015-07-04&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;2016-07-04&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;2017-07-04&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;2018-07-04&amp;#39;&lt;/span>&lt;span class="p">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">for&lt;/span> &lt;span class="n">xc&lt;/span> &lt;span class="ow">in&lt;/span> &lt;span class="n">important_dates&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">ax&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">axvline&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">x&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">xc&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">color&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;k&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">linestyle&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;--&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">ax&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">axvspan&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">pd&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">Timestamp&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;2015-09-01&amp;#39;&lt;/span>&lt;span class="p">),&lt;/span> &lt;span class="n">pd&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">Timestamp&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;2016-06-01&amp;#39;&lt;/span>&lt;span class="p">),&lt;/span> &lt;span class="n">facecolor&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;g&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">alpha&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mf">0.3&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">ax&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">axvspan&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">pd&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">Timestamp&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;2016-09-01&amp;#39;&lt;/span>&lt;span class="p">),&lt;/span> &lt;span class="n">pd&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">Timestamp&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;2017-06-01&amp;#39;&lt;/span>&lt;span class="p">),&lt;/span> &lt;span class="n">facecolor&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;g&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">alpha&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mf">0.3&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">ax&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">axvspan&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">pd&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">Timestamp&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;2017-09-01&amp;#39;&lt;/span>&lt;span class="p">),&lt;/span> &lt;span class="n">pd&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">Timestamp&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;2018-06-01&amp;#39;&lt;/span>&lt;span class="p">),&lt;/span> &lt;span class="n">facecolor&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;g&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">alpha&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mf">0.3&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">ax&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">set_xlim&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">pd&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">Timestamp&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;2015-07-01&amp;#39;&lt;/span>&lt;span class="p">),&lt;/span> &lt;span class="n">pd&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">Timestamp&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;2018-03-01&amp;#39;&lt;/span>&lt;span class="p">))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">ax&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">set_ylim&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">ymin&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">ymax&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">return&lt;/span> &lt;span class="n">_df&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="n">ax&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">get_wiki_df&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s2">&amp;#34;Sprint&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">0&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">400&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">ax&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">get_wiki_seasonal&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s2">&amp;#34;Sprint&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="o">-&lt;/span>&lt;span class="mi">100&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">400&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>&lt;img src="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_40_0.png"
+width="936"
+height="439"
+srcset="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_40_0_hu3323411141509902992.png 480w, https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_40_0_hu9484966113238745643.png 1024w"
+loading="lazy"
+alt="png"
+class="gallery-image"
+data-flex-grow="213"
+data-flex-basis="511px"
+>&lt;/p>
+&lt;p>&lt;img src="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_40_1.png"
+width="944"
+height="439"
+srcset="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_40_1_hu9473698445624832144.png 480w, https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_40_1_hu15196489123532816269.png 1024w"
+loading="lazy"
+alt="png"
+class="gallery-image"
+data-flex-grow="215"
+data-flex-basis="516px"
+>&lt;/p>
+&lt;p>The seasonality trend is scarred by incorporating a singular spike in data (the additive model tries to balance bias and variance, but obviously both can break at the same time), but we see no pattern tied to the school year. (One flaw is that the hits on the Sprint wiki page are much lower to begin with, so it isn&amp;rsquo;t as reliable of a statement.) Let&amp;rsquo;s try another topic which we suspect should breathe with the school year, US President George Washington.&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="n">ax&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">get_wiki_df&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s2">&amp;#34;George Washington&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">0&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">80000&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">ax&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">get_wiki_seasonal&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s2">&amp;#34;George Washington&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="o">-&lt;/span>&lt;span class="mi">20000&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">60000&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>&lt;img src="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_42_0.png"
+width="949"
+height="439"
+srcset="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_42_0_hu728019450810087712.png 480w, https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_42_0_hu1557588504660646986.png 1024w"
+loading="lazy"
+alt="png"
+class="gallery-image"
+data-flex-grow="216"
+data-flex-basis="518px"
+>&lt;/p>
+&lt;p>&lt;img src="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_42_1.png"
+width="957"
+height="439"
+srcset="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_42_1_hu4246950993700994017.png 480w, https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_42_1_hu5842769235406924260.png 1024w"
+loading="lazy"
+alt="png"
+class="gallery-image"
+data-flex-grow="217"
+data-flex-basis="523px"
+>&lt;/p>
+&lt;p>The trend here is less pronounced, but still evident. While we are on the topic, we present below, without commentary, a comparison on page hits between Donald Trump and Bill Clinton. I present both on the same scale to show the extraordinary difference in the magnitude of public interest in each individual.&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="n">ax&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">get_wiki_df&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s2">&amp;#34;Donald Trump&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">0&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">7000000&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">ax&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">get_wiki_seasonal&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s2">&amp;#34;Donald Trump&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="o">-&lt;/span>&lt;span class="mi">200000&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">5000000&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>&lt;img src="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_44_0.png"
+width="961"
+height="439"
+srcset="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_44_0_hu12431561242277625164.png 480w, https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_44_0_hu12987332857322901598.png 1024w"
+loading="lazy"
+alt="png"
+class="gallery-image"
+data-flex-grow="218"
+data-flex-basis="525px"
+>&lt;/p>
+&lt;p>&lt;img src="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_44_1.png"
+width="961"
+height="439"
+srcset="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_44_1_hu3905602059488561052.png 480w, https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_44_1_hu11500621787571268399.png 1024w"
+loading="lazy"
+alt="png"
+class="gallery-image"
+data-flex-grow="218"
+data-flex-basis="525px"
+>&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="n">ax&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">get_wiki_df&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s2">&amp;#34;Bill Clinton&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">0&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">7000000&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">ax&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">get_wiki_seasonal&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s2">&amp;#34;Bill Clinton&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="o">-&lt;/span>&lt;span class="mi">200000&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">5000000&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>&lt;img src="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_45_0.png"
+width="961"
+height="439"
+srcset="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_45_0_hu8610328897221780849.png 480w, https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_45_0_hu4908779868558608109.png 1024w"
+loading="lazy"
+alt="png"
+class="gallery-image"
+data-flex-grow="218"
+data-flex-basis="525px"
+>&lt;/p>
+&lt;p>&lt;img src="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_45_1.png"
+width="961"
+height="439"
+srcset="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_45_1_hu5080355382892603546.png 480w, https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_45_1_hu7112905406705259765.png 1024w"
+loading="lazy"
+alt="png"
+class="gallery-image"
+data-flex-grow="218"
+data-flex-basis="525px"
+>&lt;/p>
+&lt;p>Let&amp;rsquo;s make use of Prophet now, because it has nicer graphs and seems a little more robust in my limited usage so far. We&amp;rsquo;ve used it above, but I will walk through a little more slowly this time. First we must create a Prophet object, and fit our dataframe to Prophet such that there is a datetime column labeled ds, and the counts value column is relabeled y.&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="n">m&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">Prophet&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">yearly_seasonality&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="kc">True&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">weekly_seasonality&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="kc">True&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">mcmc_samples&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="mi">0&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">seasonality_prior_scale&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mi">50&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">proLincoln&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">dfLincoln&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">proLincoln&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;ds&amp;#39;&lt;/span>&lt;span class="p">]&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">dfLincoln&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">index&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">proLincoln&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">head&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;div>
+&lt;style scoped>
+.dataframe tbody tr th:only-of-type {
+vertical-align: middle;
+}
+&lt;pre>&lt;code>.dataframe tbody tr th {
+vertical-align: top;
+}
+.dataframe thead th {
+text-align: right;
+}
+&lt;/code>&lt;/pre>
+&lt;p>&lt;/style>&lt;/p>
+&lt;table border="1" class="dataframe">
+&lt;thead>
+&lt;tr style="text-align: right;">
+&lt;th>&lt;/th>
+&lt;th>Daily Page Counts&lt;/th>
+&lt;th>ds&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;th>2015-07-01&lt;/th>
+&lt;td>15223&lt;/td>
+&lt;td>2015-07-01&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;th>2015-07-02&lt;/th>
+&lt;td>15137&lt;/td>
+&lt;td>2015-07-02&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;th>2015-07-03&lt;/th>
+&lt;td>17291&lt;/td>
+&lt;td>2015-07-03&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;th>2015-07-04&lt;/th>
+&lt;td>19697&lt;/td>
+&lt;td>2015-07-04&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;th>2015-07-05&lt;/th>
+&lt;td>18149&lt;/td>
+&lt;td>2015-07-05&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;/div>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="n">proLincoln&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">proLincoln&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">rename&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">columns&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="s1">&amp;#39;Daily Page Counts&amp;#39;&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="s1">&amp;#39;y&amp;#39;&lt;/span>&lt;span class="p">})&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">proLincoln&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">head&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;div>
+&lt;style scoped>
+.dataframe tbody tr th:only-of-type {
+vertical-align: middle;
+}
+&lt;pre>&lt;code>.dataframe tbody tr th {
+vertical-align: top;
+}
+.dataframe thead th {
+text-align: right;
+}
+&lt;/code>&lt;/pre>
+&lt;p>&lt;/style>&lt;/p>
+&lt;table border="1" class="dataframe">
+&lt;thead>
+&lt;tr style="text-align: right;">
+&lt;th>&lt;/th>
+&lt;th>y&lt;/th>
+&lt;th>ds&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;th>2015-07-01&lt;/th>
+&lt;td>15223&lt;/td>
+&lt;td>2015-07-01&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;th>2015-07-02&lt;/th>
+&lt;td>15137&lt;/td>
+&lt;td>2015-07-02&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;th>2015-07-03&lt;/th>
+&lt;td>17291&lt;/td>
+&lt;td>2015-07-03&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;th>2015-07-04&lt;/th>
+&lt;td>19697&lt;/td>
+&lt;td>2015-07-04&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;th>2015-07-05&lt;/th>
+&lt;td>18149&lt;/td>
+&lt;td>2015-07-05&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;/div>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="n">m&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">fit&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">proLincoln&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;pre>&lt;code>INFO:fbprophet.forecaster:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+/home/d7082791602/.local/lib/python3.6/site-packages/pystan/misc.py:399: FutureWarning: Conversion of the second argument of issubdtype from `float` to `np.floating` is deprecated. In future, it will be treated as `np.float64 == np.dtype(float).type`.
+elif np.issubdtype(np.asarray(v).dtype, float):
+&amp;lt;fbprophet.forecaster.Prophet at 0x7f7fbdf32cc0&amp;gt;
+&lt;/code>&lt;/pre>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;span class="lnt">5
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="n">future&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">m&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">make_future_dataframe&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">periods&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mi">365&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">forecast&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">m&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">predict&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">future&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">forecast&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">head&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">m&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">plot_components&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">forecast&lt;/span>&lt;span class="p">);&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">m&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">plot&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">forecast&lt;/span>&lt;span class="p">);&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>&lt;img src="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_50_0.png"
+width="640"
+height="640"
+srcset="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_50_0_hu17782472607682003399.png 480w, https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_50_0_hu3113032810945161071.png 1024w"
+loading="lazy"
+alt="png"
+class="gallery-image"
+data-flex-grow="100"
+data-flex-basis="240px"
+>&lt;/p>
+&lt;p>&lt;img src="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_50_1.png"
+width="712"
+height="424"
+srcset="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_50_1_hu9186470907338717511.png 480w, https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_50_1_hu6933392603363863496.png 1024w"
+loading="lazy"
+alt="png"
+class="gallery-image"
+data-flex-grow="167"
+data-flex-basis="403px"
+>&lt;/p>
+&lt;p>Here we see that prophet also very nicely picks out the 2016 trend, and clearly picks out the school year trend as well as the weekday trend. In order to make these quick peaks at the data more systematic, we create and use the following function. We then use these functions to take a look at a varied array of Wikipedia pages and conjecture a bit about the results.&lt;/p>
+&lt;p>The first one we take a look at is &amp;ldquo;Christmas&amp;rdquo; which we expect, and indeed find, has a very clean seasonality. Note the weekday trend line shows a preference for some days over others, which is an artifact simply of which day the holiday fell on in the years that are used for training (since this holiday doesn&amp;rsquo;t fall on any particular weekday by design, and we only trained based on three years, those three days in occured on, or rather Christmas Eve, will see the bias. That would be Thursday/Friday 2015, Sunday/Monday 2016, and Monday/Tuesday 2017 [2016 was a leap year]).&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="k">def&lt;/span> &lt;span class="nf">prophet_wiki_df&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">topic&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">starting&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;20150701&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">ending&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;20180804&amp;#39;&lt;/span>&lt;span class="p">):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">_m&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">Prophet&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">yearly_seasonality&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="kc">True&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">daily_seasonality&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="kc">False&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">weekly_seasonality&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="kc">True&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">mcmc_samples&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="mi">0&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">seasonality_prior_scale&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mi">50&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">_dict&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">p&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">article_views&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;en.wikipedia&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="p">[&lt;/span>&lt;span class="n">topic&lt;/span>&lt;span class="p">],&lt;/span> &lt;span class="n">granularity&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;daily&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">start&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">starting&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">end&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">ending&lt;/span>&lt;span class="p">);&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">_df&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">pd&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">DataFrame&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">from_dict&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">_dict&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">transpose&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">_df&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">index&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">pd&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">to_datetime&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">_df&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">index&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">_df&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">plot&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">title&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s2">&amp;#34;&lt;/span>&lt;span class="si">{}&lt;/span>&lt;span class="s2"> Wikipedia Page Hit Counts&amp;#34;&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">format&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">topic&lt;/span>&lt;span class="p">))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">_df&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">_df&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">rename&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">columns&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="n">topic&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">replace&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s2">&amp;#34; &amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s2">&amp;#34;_&amp;#34;&lt;/span>&lt;span class="p">):&lt;/span> &lt;span class="s2">&amp;#34;y&amp;#34;&lt;/span>&lt;span class="p">})&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">_df&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;ds&amp;#39;&lt;/span>&lt;span class="p">]&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">_df&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">index&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">_m&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">fit&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">_df&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">_future&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">_m&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">make_future_dataframe&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">periods&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mi">365&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">_forecast&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">_m&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">predict&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">future&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">_m&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">plot_components&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">_forecast&lt;/span>&lt;span class="p">);&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">_m&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">plot&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">_forecast&lt;/span>&lt;span class="p">);&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="n">prophet_wiki_df&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;Christmas&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>&lt;img src="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_53_0.png"
+width="955"
+height="439"
+srcset="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_53_0_hu10584922616636280922.png 480w, https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_53_0_hu3736129419446245882.png 1024w"
+loading="lazy"
+alt="png"
+class="gallery-image"
+data-flex-grow="217"
+data-flex-basis="522px"
+>&lt;/p>
+&lt;p>&lt;img src="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_53_1.png"
+width="640"
+height="640"
+srcset="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_53_1_hu4256068288710772909.png 480w, https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_53_1_hu14472288856339339886.png 1024w"
+loading="lazy"
+alt="png"
+class="gallery-image"
+data-flex-grow="100"
+data-flex-basis="240px"
+>&lt;/p>
+&lt;p>&lt;img src="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_53_2.png"
+width="712"
+height="424"
+srcset="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_53_2_hu593134724396844644.png 480w, https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_53_2_hu5923363706036470394.png 1024w"
+loading="lazy"
+alt="png"
+class="gallery-image"
+data-flex-grow="167"
+data-flex-basis="403px"
+>&lt;/p>
+&lt;p>Now let&amp;rsquo;s look at something that shouldn&amp;rsquo;t really have too much seasonality, the term eclipse. Eclipses happen on a regular basis, of course, and physics predicts them extremely accurately, but human observation of eclipses happens irregularly. Here we can see that the major eclipse event of 2017 is so strongly represented in the data that it ends of defining the very inacurate model that results.&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="n">prophet_wiki_df&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;Eclipse&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>&lt;img src="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_55_0.png"
+width="949"
+height="439"
+srcset="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_55_0_hu1832817350638639316.png 480w, https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_55_0_hu68147201456411011.png 1024w"
+loading="lazy"
+alt="png"
+class="gallery-image"
+data-flex-grow="216"
+data-flex-basis="518px"
+>&lt;/p>
+&lt;p>&lt;img src="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_55_1.png"
+width="640"
+height="640"
+srcset="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_55_1_hu15436037156562971454.png 480w, https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_55_1_hu11373527152088042617.png 1024w"
+loading="lazy"
+alt="png"
+class="gallery-image"
+data-flex-grow="100"
+data-flex-basis="240px"
+>&lt;/p>
+&lt;p>&lt;img src="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_55_2.png"
+width="712"
+height="424"
+srcset="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_55_2_hu18216527407420921101.png 480w, https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_55_2_hu4936515771465198571.png 1024w"
+loading="lazy"
+alt="png"
+class="gallery-image"
+data-flex-grow="167"
+data-flex-basis="403px"
+>&lt;/p>
+&lt;p>We can see the fading of pop culture stars, such as the declining trend with Beyonce. Again, we see that the none of the output here is very trustworthy except perhaps the overall trend. Events such as awards ceremonies, album releases, and gossip events result in spikes which then dominate the seasonality models.&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="n">prophet_wiki_df&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;Beyoncé&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>&lt;img src="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_61_0.png"
+width="955"
+height="439"
+srcset="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_61_0_hu779867643647340743.png 480w, https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_61_0_hu6610046134201326222.png 1024w"
+loading="lazy"
+alt="png"
+class="gallery-image"
+data-flex-grow="217"
+data-flex-basis="522px"
+>&lt;/p>
+&lt;p>&lt;img src="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_61_1.png"
+width="640"
+height="640"
+srcset="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_61_1_hu6941949038559864271.png 480w, https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_61_1_hu6562164456866045799.png 1024w"
+loading="lazy"
+alt="png"
+class="gallery-image"
+data-flex-grow="100"
+data-flex-basis="240px"
+>&lt;/p>
+&lt;p>&lt;img src="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_61_2.png"
+width="712"
+height="424"
+srcset="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_61_2_hu12797667187750071975.png 480w, https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_61_2_hu17622665628030378456.png 1024w"
+loading="lazy"
+alt="png"
+class="gallery-image"
+data-flex-grow="167"
+data-flex-basis="403px"
+>&lt;/p>
+&lt;p>Returning to our theme above that some wiki topics breathe with the school year, electron is surely one of those topics.&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="n">prophet_wiki_df&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;Electron&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>&lt;img src="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_63_0.png"
+width="942"
+height="439"
+srcset="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_63_0_hu13630530743938612783.png 480w, https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_63_0_hu4503251938612224192.png 1024w"
+loading="lazy"
+alt="png"
+class="gallery-image"
+data-flex-grow="214"
+data-flex-basis="514px"
+>&lt;/p>
+&lt;p>&lt;img src="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_63_1.png"
+width="640"
+height="640"
+srcset="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_63_1_hu1687205569069861011.png 480w, https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_63_1_hu11000975149658991887.png 1024w"
+loading="lazy"
+alt="png"
+class="gallery-image"
+data-flex-grow="100"
+data-flex-basis="240px"
+>&lt;/p>
+&lt;p>&lt;img src="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_63_2.png"
+width="712"
+height="424"
+srcset="https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_63_2_hu8250378559885942533.png 480w, https://tdj28.github.io/p/exploring-wikipedia-page-count-trends/assets/assets20180805/output_63_2_hu17038285373130760489.png 1024w"
+loading="lazy"
+alt="png"
+class="gallery-image"
+data-flex-grow="167"
+data-flex-basis="403px"
+>&lt;/p>
+&lt;h2 id="conclusions">Conclusions
+&lt;/h2>&lt;p>Statistical tools for seasonal decomposition are a great start in trying to predict time series which have some predictability built in. For topics that have a much greater stochastic characteristic, these tools become much more difficult to use properly. Blog entries here will continue to explore these tools and go into greater detail about the math behind them and how to use the tools in more sophisticated ways. Initial impressions from this exploration here:&lt;/p>
+&lt;ul>
+&lt;li>
+&lt;p>There are some time series which are nearly perfectly predictable, such as that for the page hits on the topic of Christmas, which is an event that happens once per year and is limited in scope to a small minority of weeks in the entire year.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Other trends are fairly predictable, such as electron, because of its association with school work and the predictable seasonality of school. Interestingly, the trends one finds with topics like this show the &amp;ldquo;hit&amp;rdquo; that the holiday break seems to have on education, where the end of year break is preceeded with a sort of winding down and then followed by a winding up, both of which are not particularly rapid.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Trends that have an educational component, such as popular US Presidents like Abraham Lincoln, are complicated by holidays such as president&amp;rsquo;s day, elections, and inaugurations.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Trends from pop culture, such as Beyonce, can possibly trace the popularity of a celebrity but, are complicated by things such as album releases, awards ceremonies, gossip outbreaks, etc.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Sometimes, a massive surge in interest in a topic due to some even can entirely throw off seasonal decomposition, and such events will have to be &amp;lsquo;windowed out&amp;rsquo; and interpolated to get an accurate picture of the routine behavior of the time series.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Some topics show the decline in interest in the topic in general, or in some cases, an increasing normalization of a topic such that it gets less page views over time.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Some topics are so random that speaking about trends and seasonality is nonsense. However, these models can easily overfit that data and give you a false sense of confidence that will inevitably be proven wrong.&lt;/p>
+&lt;/li>
+&lt;/ul></description></item></channel></rss>

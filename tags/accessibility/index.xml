@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Accessibility on</title><link>https://tdj28.github.io/tags/accessibility/</link><description>Recent content in Accessibility on</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sun, 19 Aug 2018 19:21:05 -0700</lastBuildDate><atom:link href="https://tdj28.github.io/tags/accessibility/index.xml" rel="self" type="application/rss+xml"/><item><title>Using PNNL's new Cividis colormap in data science to make accessible heat maps</title><link>https://tdj28.github.io/p/using-pnnls-new-cividis-colormap-in-data-science-to-make-accessible-heat-maps/</link><pubDate>Sun, 19 Aug 2018 19:21:05 -0700</pubDate><guid>https://tdj28.github.io/p/using-pnnls-new-cividis-colormap-in-data-science-to-make-accessible-heat-maps/</guid><description>&lt;p>Heat maps have become quite common in data science, and in science in general, and for good reason. For those who can see them, they succinctly summarize patterns in data. There are many color schemes used in the wild, with the Rainbow scheme being one of the more common ones.&lt;/p>
+&lt;p>A group at &lt;a class="link" href="https://www.pnnl.gov/" target="_blank" rel="noopener"
+>Pacific Northwest National Lab&lt;/a> has recently published a &lt;a class="link" href="https://arxiv.org/pdf/1712.01662.pdf" target="_blank" rel="noopener"
+>PLOS One article&lt;/a> (hat tip &lt;a class="link" href="https://www.scientificamerican.com/article/end-of-the-rainbow-new-map-scale-is-more-readable-by-people-who-are-color-blind/" target="_blank" rel="noopener"
+>Scientific American article&lt;/a>) outlining their efforts to use mathematical modeling and the science of vision to create color maps for plots such that the exact same information is conveyed to those with and without color blindness.&lt;/p>
+&lt;p>The goal of this blogpost is to demonstrate a quick way you can utilize their results in your own graphs (if you use Python). Interested readers can follow the links above for more detail on their methodology. What follows below is enough to get you off the ground using their Cividis colormap right away. Here is a sample of the difference one can get using Cividis:&lt;/p>
+&lt;p>&lt;img src="https://tdj28.github.io/p/using-pnnls-new-cividis-colormap-in-data-science-to-make-accessible-heat-maps/assets/Cividis-heatmap-41643744.png"
+width="1582"
+height="714"
+srcset="https://tdj28.github.io/p/using-pnnls-new-cividis-colormap-in-data-science-to-make-accessible-heat-maps/assets/Cividis-heatmap-41643744_hu3577220855860866480.png 480w, https://tdj28.github.io/p/using-pnnls-new-cividis-colormap-in-data-science-to-make-accessible-heat-maps/assets/Cividis-heatmap-41643744_hu15403655901883397564.png 1024w"
+loading="lazy"
+alt="before and after"
+class="gallery-image"
+data-flex-grow="221"
+data-flex-basis="531px"
+>&lt;/p>
+&lt;p>The sample above is just a starting point. More sophisticated examples of the use of Cividis can be found in the corresponding library and the above reference article.&lt;/p>
+&lt;h2 id="installing-the-library">Installing the Library
+&lt;/h2>&lt;aside aria-label="note" class="note">
+&lt;div>
+&lt;pre>&lt;code>&amp;lt;p&amp;gt;UPDATE Sep 13 2018:&amp;lt;/p&amp;gt;
+&lt;/code>&lt;/pre>
+&lt;p>The PR has been merged and you can just install with &lt;code>pip install cmaputil&lt;/code> without having to pull the branch.&lt;/p>
+&lt;/div>
+&lt;/aside>
+&lt;p>PNNL&amp;rsquo;s &lt;code>cmaputil&lt;/code> library can be downloaded from their &lt;a class="link" href="https://github.com/pnnl/cmaputil" target="_blank" rel="noopener"
+>github&lt;/a> page or installed via &lt;code>pip install cmaputil&lt;/code>. However, for the use cases I&amp;rsquo;m showing here, that won&amp;rsquo;t quite work. &lt;a class="link" href="https://github.com/pnnl/cmaputil/pull/3" target="_blank" rel="noopener"
+>This PR&lt;/a> shows why. If that PR has been merged, or an alternative fix merged, you should be able to use the library from the source. If not, here is a quick work around:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;span class="lnt">5
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">git clone https://github.com/tdj28/cmaputil
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">git checkout -b patch-1
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">git pull
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nb">cd&lt;/span> cmaputil
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">python setup.py install
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>Assuming that works, you can now use the camputil library to use optimized Cividis colormaps.&lt;/p>
+&lt;h2 id="using-cividis">Using Cividis
+&lt;/h2>&lt;p>We would start by importing the key libraries:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="kn">import&lt;/span> &lt;span class="nn">cmaputil&lt;/span> &lt;span class="k">as&lt;/span> &lt;span class="nn">cmu&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">import&lt;/span> &lt;span class="nn">cmaputil.cvdutil&lt;/span> &lt;span class="k">as&lt;/span> &lt;span class="nn">cvu&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">import&lt;/span> &lt;span class="nn">scipy&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>Next, add the following section to your code. It modifies
+the viridis colormap that comes with matplotlib and runs
+some optimizations on it.&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;span class="lnt">16
+&lt;/span>&lt;span class="lnt">17
+&lt;/span>&lt;span class="lnt">18
+&lt;/span>&lt;span class="lnt">19
+&lt;/span>&lt;span class="lnt">20
+&lt;/span>&lt;span class="lnt">21
+&lt;/span>&lt;span class="lnt">22
+&lt;/span>&lt;span class="lnt">23
+&lt;/span>&lt;span class="lnt">24
+&lt;/span>&lt;span class="lnt">25
+&lt;/span>&lt;span class="lnt">26
+&lt;/span>&lt;span class="lnt">27
+&lt;/span>&lt;span class="lnt">28
+&lt;/span>&lt;span class="lnt">29
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Input colormap nam&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">cmap&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="s1">&amp;#39;viridis&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Optimize&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">rgb1&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">jab1&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">cmu&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">get_rgb_jab&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">cmap&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="c1"># Original colormap&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">rgb2&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">jab2&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">cmu&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">get_rgb_jab&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">cvu&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">get_cvd&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">rgb1&lt;/span>&lt;span class="p">))&lt;/span> &lt;span class="c1"># CVD colormap&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">jab3&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">cmu&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">make_linear&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">jab2&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="c1"># Uniformize hue (a&amp;#39; vs. b&amp;#39;)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">#print(jab3)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">_&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">jab4&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">cmu&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">correct_J&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">jab3&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="c1"># Linearize J&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Convert back to sRGB&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">rgb4&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">cmu&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">convert&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">jab4&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">cmu&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">CSPACE2&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">cmu&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">CSPACE1&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">rgb4&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">np&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">clip&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">rgb4&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">0&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">1&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Resimulate CVD in case corrections took the map outside CVD-safe space&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">rgb4&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">cvu&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">get_cvd&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">rgb4&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Resimulate CVD in case corrections took the map outside CVD-safe space&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">rgb4&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">cvu&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">get_cvd&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">rgb4&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">colors&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="p">[]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">for&lt;/span> &lt;span class="n">j&lt;/span> &lt;span class="ow">in&lt;/span> &lt;span class="nb">range&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nb">len&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">rgb4&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">])):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">colors&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">append&lt;/span>&lt;span class="p">(&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="n">rgb4&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">][&lt;/span>&lt;span class="n">j&lt;/span>&lt;span class="p">],&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">rgb4&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">][&lt;/span>&lt;span class="n">j&lt;/span>&lt;span class="p">],&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">rgb4&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">2&lt;/span>&lt;span class="p">][&lt;/span>&lt;span class="n">j&lt;/span>&lt;span class="p">])&lt;/span> &lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Convert to matplotlib colormap&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">cividis&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">mpl&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">colors&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">LinearSegmentedColormap&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">from_list&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s2">&amp;#34;&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">colors&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>Finally, you can easily incorporate it into your matplotlib plots as in the following example:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;span class="lnt">5
+&lt;/span>&lt;span class="lnt">6
+&lt;/span>&lt;span class="lnt">7
+&lt;/span>&lt;span class="lnt">8
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">clf&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">fig&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">figure&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">figsize&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">9&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">9&lt;/span>&lt;span class="p">))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">title&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;Cividis Heatmap&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">ylabel&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;y&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">xlabel&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;x&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">im&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">imshow&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">heatmap&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">extent&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">extent&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">cmap&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">cividis&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">origin&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;lower&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">fig&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">colorbar&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">im&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">savefig&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;Cividis Heatmap&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>We can compare the rainbow version of the above plot:&lt;/p>
+&lt;p>&lt;img src="https://tdj28.github.io/p/using-pnnls-new-cividis-colormap-in-data-science-to-make-accessible-heat-maps/assets/Cividis-heatmap-5ca3f3e1.png"
+width="1466"
+height="1498"
+srcset="https://tdj28.github.io/p/using-pnnls-new-cividis-colormap-in-data-science-to-make-accessible-heat-maps/assets/Cividis-heatmap-5ca3f3e1_hu339624234426928938.png 480w, https://tdj28.github.io/p/using-pnnls-new-cividis-colormap-in-data-science-to-make-accessible-heat-maps/assets/Cividis-heatmap-5ca3f3e1_hu6167471651917033608.png 1024w"
+loading="lazy"
+alt="rainbow version"
+class="gallery-image"
+data-flex-grow="97"
+data-flex-basis="234px"
+>&lt;/p>
+&lt;p>with the Cividis version:&lt;/p>
+&lt;p>&lt;img src="https://tdj28.github.io/p/using-pnnls-new-cividis-colormap-in-data-science-to-make-accessible-heat-maps/assets/Cividis-heatmap-69d2bb6c.png"
+width="1482"
+height="1496"
+srcset="https://tdj28.github.io/p/using-pnnls-new-cividis-colormap-in-data-science-to-make-accessible-heat-maps/assets/Cividis-heatmap-69d2bb6c_hu18035002315465264661.png 480w, https://tdj28.github.io/p/using-pnnls-new-cividis-colormap-in-data-science-to-make-accessible-heat-maps/assets/Cividis-heatmap-69d2bb6c_hu5879199578886571484.png 1024w"
+loading="lazy"
+alt="civids version"
+class="gallery-image"
+data-flex-grow="99"
+data-flex-basis="237px"
+>&lt;/p>
+&lt;p>It certainly may be a matter of preference for most folks. I find the Cividis version more appealing, for example, because although the dark reds pop to me and pinpoint &amp;ldquo;hot spots&amp;rdquo; perhaps a little more quickly, they appear to be almost detached from the rest of the heat blob. In the Cividis mapping, as in other mappings which have only two colors, the spectrum is clearer. Given that using Cividis ensures that any color blind readers will be getting the same information as I see seals the deal for me and makes Cividis my go to choice for colormaps going forward.&lt;/p>
+&lt;h2 id="conclusions">Conclusions
+&lt;/h2>&lt;ul>
+&lt;li>
+&lt;p>Cividis is an optimized version of the viridis colormap which optimizes for both the ability to discern patterns for those with normal vision and the ability of the color blind to see the exact same thing.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Cividis works in Python and they also have an R library. This quick blog note shows how to use it &lt;em>right now&lt;/em>, but I anticipate and hope that it will become obsolete and matplotlib will incorporate Cividis and PNNL&amp;rsquo;s work on this. COMSOL Multiphysics, a finite element analysis software package, for example, will be doing so.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>You can find a standalone python script which I used to create these plots using Cividis &lt;a class="link" href="https://github.com/3implieschaos/various/blob/master/2018/20180819/heatmap.py" target="_blank" rel="noopener"
+>here&lt;/a>&lt;/p>
+&lt;/li>
+&lt;/ul></description></item></channel></rss>

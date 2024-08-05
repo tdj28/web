@@ -1,0 +1,1433 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Devops on</title><link>https://tdj28.github.io/tags/devops/</link><description>Recent content in Devops on</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sun, 24 Jun 2018 19:21:05 -0700</lastBuildDate><atom:link href="https://tdj28.github.io/tags/devops/index.xml" rel="self" type="application/rss+xml"/><item><title>A Risk Analysis Bowtie Diagram in Latex</title><link>https://tdj28.github.io/p/a-risk-analysis-bowtie-diagram-in-latex/</link><pubDate>Sun, 24 Jun 2018 19:21:05 -0700</pubDate><guid>https://tdj28.github.io/p/a-risk-analysis-bowtie-diagram-in-latex/</guid><description>&lt;h3 id="bowtie-diagram-in-latex">Bowtie Diagram in LaTeX
+&lt;/h3>&lt;p>For folks who have to conduct risk analysis, there are
+very limited choices for the creation of &amp;ldquo;bowtie diagrams&amp;rdquo;.
+Searching the web for examples in LaTeX comes up pretty empty.
+So when googling comes up empty, its time to create:&lt;/p>
+&lt;p>&lt;a class="link" href="https://github.com/3implieschaos/latex-demos/blob/master/figures/bowtie/bowtie.tex" target="_blank" rel="noopener"
+>Bowtie diagram in LaTeX example&lt;/a>&lt;/p>
+&lt;p>This code results in a diagram that looks pretty acceptable
+in terms of quality, or at least an acceptable starting point:&lt;/p>
+&lt;p>&lt;img src="https://tdj28.github.io/p/a-risk-analysis-bowtie-diagram-in-latex/assets/bowtie.png"
+width="2442"
+height="1014"
+srcset="https://tdj28.github.io/p/a-risk-analysis-bowtie-diagram-in-latex/assets/bowtie_hu16712095989164531860.png 480w, https://tdj28.github.io/p/a-risk-analysis-bowtie-diagram-in-latex/assets/bowtie_hu17423726680510094979.png 1024w"
+loading="lazy"
+alt="bowtie diagram"
+class="gallery-image"
+data-flex-grow="240"
+data-flex-basis="577px"
+>&lt;/p></description></item><item><title>DevOps 101: Chef Cookbook with Testing</title><link>https://tdj28.github.io/p/devops-101-chef-cookbook-with-testing/</link><pubDate>Sat, 28 Jan 2017 19:21:05 -0700</pubDate><guid>https://tdj28.github.io/p/devops-101-chef-cookbook-with-testing/</guid><description>&lt;h2 id="introduction">Introduction
+&lt;/h2>&lt;h3 id="yet-another-chef-tutorial">Yet another chef tutorial
+&lt;/h3>&lt;p>You can of course skip this step if you are familiar with Chef to a great enough degree, but in the spirit of making this a self-contained walkthrough, we will start from the ground up.&lt;/p>
+&lt;h4 id="getting-started">Getting started
+&lt;/h4>&lt;h5 id="installing-chefdk">Installing ChefDK
+&lt;/h5>&lt;p>It is widely considered best practice to use &lt;a class="link" href="https://downloads.chef.io/chefdk" target="_blank" rel="noopener"
+>ChefDK&lt;/a>, and this walkthrough uses ChefDK exclusively.&lt;/p>
+&lt;ul>
+&lt;li>On Mac, install &lt;a class="link" href="http://brew.sh/" target="_blank" rel="noopener"
+>HomeBrew&lt;/a> and run &lt;code>brew cask install chefdk&lt;/code>&lt;/li>
+&lt;li>On Linux, &lt;a class="link" href="https://downloads.chef.io/chefdk" target="_blank" rel="noopener"
+>download a package&lt;/a> corresponding to your distro and install accordingly.&lt;/li>
+&lt;li>On Windows: Run Linux as a Virtual Machine, get Docker for Windows, or &lt;em>try&lt;/em> using Bash on Windows, but this walkthrough doesn&amp;rsquo;t support Windows-based development.&lt;/li>
+&lt;/ul>
+&lt;h5 id="initiating-your-cookbook">Initiating your cookbook
+&lt;/h5>&lt;p>Let&amp;rsquo;s start with the following command:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">chef generate cookbook c9_ide_chef
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>This command generates a template for a cookbook. Note that we use and underline in the name instead of a hyphen as hyphens can be problematic for chef in some circumstances. We now have a folder with the following content:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;span class="lnt">16
+&lt;/span>&lt;span class="lnt">17
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">├── .gitignore
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">├── .kitchen.yml
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">├── Berksfile
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">├── README.md
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">├── chefignore
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">├── metadata.rb
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">├── recipes
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">│   └── default.rb
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">├── spec
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">│   ├── spec_helper.rb
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">│   └── unit
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">│   └── recipes
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">│   └── default_spec.rb
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">└── &lt;span class="nb">test&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> └── smoke
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> └── default
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> └── default_test.rb
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>It also creates a &lt;code>.delivery&lt;/code> and a &lt;code>.git&lt;/code> folder whose contents are omitted here for clarity.&lt;/p>
+&lt;p>The second command creates an attribute folder which we can populate with default attributes for our cookbook, and the third line creates a default template for a &amp;ldquo;message of the day&amp;rdquo; to be displayed when first logging in.&lt;/p>
+&lt;p>The &lt;code>.git&lt;/code> directory is useful and we will use it as the basis for a new repo in github repo.&lt;/p>
+&lt;h5 id="pushing-to-github">Pushing to GitHub
+&lt;/h5>&lt;p>Now that we have the skeleton for our cookbook, we should start pushing to GitHub for version-control. On GitHub, create a public repo called c9_ide. Then run the following commands:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">git add .
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">git commit -m &lt;span class="s2">&amp;#34;First commit&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">git remote add origin git@github.com:YOUR_GITHUB_USERNAME/c9_ide_chef.git
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">git push -u origin master
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>Now the stage is set and we are ready to make the cookbook actually do something.&lt;/p>
+&lt;h4 id="create-the-core-configuration">Create the core configuration
+&lt;/h4>&lt;h5 id="creating-a-story-for-the-cookbook">Creating a story for the cookbook
+&lt;/h5>&lt;p>So far we&amp;rsquo;ve seen how to set up the cookbook, but we don&amp;rsquo;t quite know what we are going to do with it. Now is a good time to set up some goals for our cookbook:&lt;/p>
+&lt;ul>
+&lt;li>It should update all packages before doing anything else&lt;/li>
+&lt;li>It should create a message of the day that gives basic information about the server to a user logging in&lt;/li>
+&lt;li>It should install basic security packages and other utilities&lt;/li>
+&lt;li>It should install the packages needed to run Cloud 9 IDE&lt;/li>
+&lt;li>It should pull and install Cloud 9 IDE&lt;/li>
+&lt;/ul>
+&lt;h6 id="updating-all-packages">Updating all packages
+&lt;/h6>&lt;p>Just for fun, we are going to make our cookbook work for both Debian and RHEL variations of Linux. Under the recipes folder, let&amp;rsquo;s create a recipe file called &lt;code>update.rb&lt;/code> and give it contents:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;span class="lnt">16
+&lt;/span>&lt;span class="lnt">17
+&lt;/span>&lt;span class="lnt">18
+&lt;/span>&lt;span class="lnt">19
+&lt;/span>&lt;span class="lnt">20
+&lt;/span>&lt;span class="lnt">21
+&lt;/span>&lt;span class="lnt">22
+&lt;/span>&lt;span class="lnt">23
+&lt;/span>&lt;span class="lnt">24
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-ruby" data-lang="ruby">&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Update system to start with&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">case&lt;/span> &lt;span class="n">node&lt;/span>&lt;span class="o">[&lt;/span>&lt;span class="s1">&amp;#39;platform&amp;#39;&lt;/span>&lt;span class="o">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">when&lt;/span> &lt;span class="s1">&amp;#39;debian&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;ubuntu&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">execute&lt;/span> &lt;span class="s1">&amp;#39;AptUpdateUpgrade&amp;#39;&lt;/span> &lt;span class="k">do&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">command&lt;/span> &lt;span class="s2">&amp;#34;apt-get update &amp;amp;&amp;amp; DEBIAN_FRONTEND=noninteractive apt-get upgrade -y&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">end&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">when&lt;/span> &lt;span class="s1">&amp;#39;redhat&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;centos&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;fedora&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># Update all packages&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">execute&lt;/span> &lt;span class="s1">&amp;#39;UpdateYum&amp;#39;&lt;/span> &lt;span class="k">do&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">command&lt;/span> &lt;span class="s2">&amp;#34;yum -y update&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">end&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># Add Fedora&amp;#39;s Extra Packages for Enterprise Linux&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">execute&lt;/span> &lt;span class="s1">&amp;#39;GetEPELRepo&amp;#39;&lt;/span> &lt;span class="k">do&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">command&lt;/span> &lt;span class="s2">&amp;#34;rpm -iUvh http://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-9.noarch.rpm&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">not_if&lt;/span> &lt;span class="s2">&amp;#34;rpm -qa | grep -qx &amp;#39;epel-release-7-9.noarch&amp;#39;&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">end&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">end&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>in the &lt;code>default.rb&lt;/code> recipe, add the line:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-ruby" data-lang="ruby">&lt;span class="line">&lt;span class="cl">&lt;span class="n">include_recipe&lt;/span> &lt;span class="s1">&amp;#39;c9_ide::update&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>That&amp;rsquo;s it for now! Before we go any further, let&amp;rsquo;s test this. Chef has automatically added some basis for testing to your repo. Let&amp;rsquo;s start with kitchen. This assumes you have &lt;a class="link" href="https://www.virtualbox.org/wiki/Downloads" target="_blank" rel="noopener"
+>VirtualBox&lt;/a> and &lt;a class="link" href="https://www.vagrantup.com/" target="_blank" rel="noopener"
+>Vagrant&lt;/a> installed (if you don&amp;rsquo;t, install them). At the base directory, run:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">kitchen create
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">kitchen converge
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>The first command creates the virtual machines for us to work with, and teh second command cooks Chef inside of them. It is a very convenient way to do a full test of your code before pushing to github. The converge command may take quite a while as we are updating all packages on the systems and doing it for two VMs, and Ubuntu one and a CentOS one. If all goes well, the final output looks like:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">Chef Client finished, 1/1 resources updated in &lt;span class="m">02&lt;/span> minutes &lt;span class="m">21&lt;/span> seconds
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;h6 id="creating-a-c9-user">Creating a C9 User
+&lt;/h6>&lt;p>It is rarely a good idea to run a program as root. As such, our next step is to create a user for running the Cloud 9 IDE. We start by creating a data bag. First, install knife-solo and &lt;a class="link" href="https://github.com/thbishop/knife-solo_data_bag" target="_blank" rel="noopener"
+>knife-solo data bag&lt;/a>:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">chef gem install knife-solo
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">chef gem install knife-solo_data_bag
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>This is not entirely necessary, but that tool can be useful in other ways for making chef solo cookbooks. Then we can generate a databag and databag item:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">mkdir data_bags
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nb">export&lt;/span> &lt;span class="nv">EDITOR&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s2">&amp;#34;vi&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">knife solo data bag create users c9ide
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>In the editor that pops up, paste the following content:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;span class="lnt">5
+&lt;/span>&lt;span class="lnt">6
+&lt;/span>&lt;span class="lnt">7
+&lt;/span>&lt;span class="lnt">8
+&lt;/span>&lt;span class="lnt">9
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-json" data-lang="json">&lt;span class="line">&lt;span class="cl">&lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nt">&amp;#34;id&amp;#34;&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="s2">&amp;#34;c9ide&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nt">&amp;#34;comment&amp;#34;&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="s2">&amp;#34;c9ide User&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nt">&amp;#34;ssh_keys&amp;#34;&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="p">[&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s2">&amp;#34;&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">],&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nt">&amp;#34;home&amp;#34;&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="s2">&amp;#34;/home/c9ide&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nt">&amp;#34;ssh_keygen&amp;#34;&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="kc">false&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>Next, back to &lt;code>recipe/default.rb&lt;/code>, we can invoke the external chef recipe &amp;ldquo;users&amp;rdquo; to have this user installed on our system:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-ruby" data-lang="ruby">&lt;span class="line">&lt;span class="cl">&lt;span class="n">include_recipe&lt;/span> &lt;span class="s1">&amp;#39;user::data_bag&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>To create an attributes file:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">chef generate attribute default
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>and in &lt;code>attributes/default.rb&lt;/code> add the line:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-ruby" data-lang="ruby">&lt;span class="line">&lt;span class="cl">&lt;span class="n">default&lt;/span>&lt;span class="o">[&lt;/span>&lt;span class="s1">&amp;#39;users&amp;#39;&lt;/span>&lt;span class="o">]&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="s1">&amp;#39;c9ide&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>This of course shows the fantastic power and utility of Chef since we can call upon a wide range of libraries already created by the chef community. Now we need to tell Chef that we are using an external library, so in our &lt;code>metadata.rb&lt;/code> file at the top level we add the line at the end:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-ruby" data-lang="ruby">&lt;span class="line">&lt;span class="cl">&lt;span class="n">depends&lt;/span> &lt;span class="s1">&amp;#39;user&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>At the same level there is a Berksfile with the content:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-ruby" data-lang="ruby">&lt;span class="line">&lt;span class="cl">&lt;span class="n">source&lt;/span> &lt;span class="s1">&amp;#39;https://supermarket.chef.io&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">metadata&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>which tells chef to check this &lt;code>metadata.rb&lt;/code> file for dependencies (such as the user dependency we just added) that we need to pull and make available during cooking. We&amp;rsquo;ll show how this is done manually a bit later, but for now &lt;code>kitchen converge&lt;/code> takes care of that.&lt;/p>
+&lt;p>Now run &lt;code>kitchen converge&lt;/code> one more time, and you should see that the user is created.&lt;/p>
+&lt;p>Let&amp;rsquo;s create a quick smoke test item, add:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-ruby" data-lang="ruby">&lt;span class="line">&lt;span class="cl">&lt;span class="n">describe&lt;/span> &lt;span class="n">user&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;c9ide&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="k">do&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">it&lt;/span> &lt;span class="p">{&lt;/span> &lt;span class="n">should&lt;/span> &lt;span class="n">exist&lt;/span> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">end&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>to &lt;code>test/default/default_test.rb&lt;/code> and run&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">kitchen verify
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>if all went well you will see:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl"> User c9ide
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> ✔ should exist
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>Now is a good time to push to github:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">git add .
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">git commit -m &lt;span class="s2">&amp;#34;Adds update and users&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">git push origin master
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;h6 id="installing-motd">Installing MOTD
+&lt;/h6>&lt;p>First, let&amp;rsquo;s generate a blank template file:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">chef generate template motd
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>fill with content:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">&amp;lt;%&lt;span class="o">=&lt;/span> node&lt;span class="o">[&lt;/span>&lt;span class="s1">&amp;#39;motd-attributes&amp;#39;&lt;/span>&lt;span class="o">][&lt;/span>&lt;span class="s1">&amp;#39;message&amp;#39;&lt;/span>&lt;span class="o">]&lt;/span> %&amp;gt;
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">The hostname of this node is &amp;lt;%&lt;span class="o">=&lt;/span> node&lt;span class="o">[&lt;/span>&lt;span class="s1">&amp;#39;hostname&amp;#39;&lt;/span>&lt;span class="o">]&lt;/span> %&amp;gt;
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">The IP address of this node is &amp;lt;%&lt;span class="o">=&lt;/span> node&lt;span class="o">[&lt;/span>&lt;span class="s1">&amp;#39;ipaddress&amp;#39;&lt;/span>&lt;span class="o">]&lt;/span> %&amp;gt;
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>and create a recipe file &lt;code>recipes/motd.rb&lt;/code> with contents:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">template &lt;span class="s1">&amp;#39;/etc/motd&amp;#39;&lt;/span> &lt;span class="k">do&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nb">source&lt;/span> &lt;span class="s1">&amp;#39;motd.erb&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> mode &lt;span class="s1">&amp;#39;0644&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">end
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>and finally add this line to the &lt;code>attributes/default.rb&lt;/code> file:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-ruby" data-lang="ruby">&lt;span class="line">&lt;span class="cl">&lt;span class="n">default&lt;/span>&lt;span class="o">[&lt;/span>&lt;span class="s1">&amp;#39;motd-attributes&amp;#39;&lt;/span>&lt;span class="o">][&lt;/span>&lt;span class="s1">&amp;#39;message&amp;#39;&lt;/span>&lt;span class="o">]&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="s2">&amp;#34;A Cloud 9 IDE server&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>We add the following tests at &lt;code>test/smoke/default/motd_test.rb&lt;/code>:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-ruby" data-lang="ruby">&lt;span class="line">&lt;span class="cl">&lt;span class="n">describe&lt;/span> &lt;span class="n">directory&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;/etc/motd&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="k">do&lt;/span> &lt;span class="c1"># describe this directory&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">its&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="ss">:content&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">{&lt;/span> &lt;span class="n">should&lt;/span> &lt;span class="n">match&lt;/span> &lt;span class="sr">/A Cloud 9 IDE server/&lt;/span> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">end&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>We run &lt;code>kitchen converge&lt;/code> and &lt;code>kitchen verify&lt;/code> again to make sure the recipe is fine, and then push to github as before.&lt;/p>
+&lt;h6 id="installing-packages">Installing Packages
+&lt;/h6>&lt;p>We are getting close to installing the Cloud9 IDE. Before doing so, we need to install some packages. Some of these packages are for security purposes, or convenience in administration, while others are needed for the Cloud 9 IDE system.&lt;/p>
+&lt;p>Create a file &lt;code>recipe/packages.rb&lt;/code> with content:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;span class="lnt">16
+&lt;/span>&lt;span class="lnt">17
+&lt;/span>&lt;span class="lnt">18
+&lt;/span>&lt;span class="lnt">19
+&lt;/span>&lt;span class="lnt">20
+&lt;/span>&lt;span class="lnt">21
+&lt;/span>&lt;span class="lnt">22
+&lt;/span>&lt;span class="lnt">23
+&lt;/span>&lt;span class="lnt">24
+&lt;/span>&lt;span class="lnt">25
+&lt;/span>&lt;span class="lnt">26
+&lt;/span>&lt;span class="lnt">27
+&lt;/span>&lt;span class="lnt">28
+&lt;/span>&lt;span class="lnt">29
+&lt;/span>&lt;span class="lnt">30
+&lt;/span>&lt;span class="lnt">31
+&lt;/span>&lt;span class="lnt">32
+&lt;/span>&lt;span class="lnt">33
+&lt;/span>&lt;span class="lnt">34
+&lt;/span>&lt;span class="lnt">35
+&lt;/span>&lt;span class="lnt">36
+&lt;/span>&lt;span class="lnt">37
+&lt;/span>&lt;span class="lnt">38
+&lt;/span>&lt;span class="lnt">39
+&lt;/span>&lt;span class="lnt">40
+&lt;/span>&lt;span class="lnt">41
+&lt;/span>&lt;span class="lnt">42
+&lt;/span>&lt;span class="lnt">43
+&lt;/span>&lt;span class="lnt">44
+&lt;/span>&lt;span class="lnt">45
+&lt;/span>&lt;span class="lnt">46
+&lt;/span>&lt;span class="lnt">47
+&lt;/span>&lt;span class="lnt">48
+&lt;/span>&lt;span class="lnt">49
+&lt;/span>&lt;span class="lnt">50
+&lt;/span>&lt;span class="lnt">51
+&lt;/span>&lt;span class="lnt">52
+&lt;/span>&lt;span class="lnt">53
+&lt;/span>&lt;span class="lnt">54
+&lt;/span>&lt;span class="lnt">55
+&lt;/span>&lt;span class="lnt">56
+&lt;/span>&lt;span class="lnt">57
+&lt;/span>&lt;span class="lnt">58
+&lt;/span>&lt;span class="lnt">59
+&lt;/span>&lt;span class="lnt">60
+&lt;/span>&lt;span class="lnt">61
+&lt;/span>&lt;span class="lnt">62
+&lt;/span>&lt;span class="lnt">63
+&lt;/span>&lt;span class="lnt">64
+&lt;/span>&lt;span class="lnt">65
+&lt;/span>&lt;span class="lnt">66
+&lt;/span>&lt;span class="lnt">67
+&lt;/span>&lt;span class="lnt">68
+&lt;/span>&lt;span class="lnt">69
+&lt;/span>&lt;span class="lnt">70
+&lt;/span>&lt;span class="lnt">71
+&lt;/span>&lt;span class="lnt">72
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-ruby" data-lang="ruby">&lt;span class="line">&lt;span class="cl">&lt;span class="k">case&lt;/span> &lt;span class="n">node&lt;/span>&lt;span class="o">[&lt;/span>&lt;span class="s1">&amp;#39;platform&amp;#39;&lt;/span>&lt;span class="o">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">when&lt;/span> &lt;span class="s1">&amp;#39;debian&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;ubuntu&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">req_packages&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="o">[&lt;/span>&lt;span class="s1">&amp;#39;fail2ban&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s1">&amp;#39;gcc&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s1">&amp;#39;g++&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s1">&amp;#39;git&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s1">&amp;#39;htop&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s1">&amp;#39;make&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s1">&amp;#39;nodejs&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s1">&amp;#39;nmap&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s1">&amp;#39;npm&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s1">&amp;#39;sysstat&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s1">&amp;#39;unattended-upgrades&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s1">&amp;#39;apt-listchanges&amp;#39;&lt;/span>&lt;span class="o">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">req_packages&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">each&lt;/span> &lt;span class="k">do&lt;/span> &lt;span class="o">|&lt;/span>&lt;span class="n">packs&lt;/span>&lt;span class="o">|&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="no">Chef&lt;/span>&lt;span class="o">::&lt;/span>&lt;span class="no">Log&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">info&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s2">&amp;#34;Installing: &amp;#34;&lt;/span> &lt;span class="o">+&lt;/span> &lt;span class="n">packs&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">package&lt;/span> &lt;span class="n">packs&lt;/span> &lt;span class="k">do&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">action&lt;/span> &lt;span class="ss">:install&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">end&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">end&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">template&lt;/span> &lt;span class="s1">&amp;#39;/etc/apt/apt.conf.d/50unattended-upgrades&amp;#39;&lt;/span> &lt;span class="k">do&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">owner&lt;/span> &lt;span class="s1">&amp;#39;root&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">group&lt;/span> &lt;span class="s1">&amp;#39;root&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">mode&lt;/span> &lt;span class="s1">&amp;#39;0644&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">source&lt;/span> &lt;span class="s1">&amp;#39;50unattended-upgrades.erb&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">end&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">template&lt;/span> &lt;span class="s1">&amp;#39;/etc/apt/apt.conf.d/20auto-upgrades&amp;#39;&lt;/span> &lt;span class="k">do&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">owner&lt;/span> &lt;span class="s1">&amp;#39;root&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">group&lt;/span> &lt;span class="s1">&amp;#39;root&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">mode&lt;/span> &lt;span class="s1">&amp;#39;0644&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">source&lt;/span> &lt;span class="s1">&amp;#39;20auto-upgrades.erb&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">end&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">when&lt;/span> &lt;span class="s1">&amp;#39;redhat&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;centos&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;fedora&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">req_packages&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="o">[&lt;/span>&lt;span class="s1">&amp;#39;fail2ban&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s1">&amp;#39;gcc-c++&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s1">&amp;#39;git&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s1">&amp;#39;glibc-static&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s1">&amp;#39;htop&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s1">&amp;#39;make&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s1">&amp;#39;nodejs&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s1">&amp;#39;nmap&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s1">&amp;#39;npm&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s1">&amp;#39;sysstat&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s1">&amp;#39;yum-cron&amp;#39;&lt;/span>&lt;span class="o">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">req_packages&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">each&lt;/span> &lt;span class="k">do&lt;/span> &lt;span class="o">|&lt;/span>&lt;span class="n">packs&lt;/span>&lt;span class="o">|&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="no">Chef&lt;/span>&lt;span class="o">::&lt;/span>&lt;span class="no">Log&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">info&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s2">&amp;#34;Installing: &amp;#34;&lt;/span> &lt;span class="o">+&lt;/span> &lt;span class="n">packs&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">package&lt;/span> &lt;span class="n">packs&lt;/span> &lt;span class="k">do&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">action&lt;/span> &lt;span class="ss">:install&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">end&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">end&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">template&lt;/span> &lt;span class="s1">&amp;#39;/etc/yum/yum-cron.conf&amp;#39;&lt;/span> &lt;span class="k">do&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">owner&lt;/span> &lt;span class="s1">&amp;#39;root&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">group&lt;/span> &lt;span class="s1">&amp;#39;root&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">mode&lt;/span> &lt;span class="s1">&amp;#39;0644&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">source&lt;/span> &lt;span class="s1">&amp;#39;yum-cron.conf.erb&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">end&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">execute&lt;/span> &lt;span class="s1">&amp;#39;systemctl enable yum-cron&amp;#39;&lt;/span> &lt;span class="k">do&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">end&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">execute&lt;/span> &lt;span class="s1">&amp;#39;systemctl start yum-cron&amp;#39;&lt;/span> &lt;span class="k">do&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">end&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">end&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>Notice that we have sneaked in automated security updates as well. For that, we require the following templates:&lt;/p>
+&lt;p>&lt;code>templates/50unattended-upgrades.erb&lt;/code>:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;span class="lnt">16
+&lt;/span>&lt;span class="lnt">17
+&lt;/span>&lt;span class="lnt">18
+&lt;/span>&lt;span class="lnt">19
+&lt;/span>&lt;span class="lnt">20
+&lt;/span>&lt;span class="lnt">21
+&lt;/span>&lt;span class="lnt">22
+&lt;/span>&lt;span class="lnt">23
+&lt;/span>&lt;span class="lnt">24
+&lt;/span>&lt;span class="lnt">25
+&lt;/span>&lt;span class="lnt">26
+&lt;/span>&lt;span class="lnt">27
+&lt;/span>&lt;span class="lnt">28
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">// Automatically upgrade packages from these &lt;span class="o">(&lt;/span>origin, archive&lt;span class="o">)&lt;/span> pairs
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">Unattended-Upgrade::Allowed-Origins &lt;span class="o">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &amp;lt;% node&lt;span class="o">[&lt;/span>&lt;span class="s1">&amp;#39;unattended-upgrades&amp;#39;&lt;/span>&lt;span class="o">][&lt;/span>&lt;span class="s1">&amp;#39;origins&amp;#39;&lt;/span>&lt;span class="o">]&lt;/span>.each &lt;span class="k">do&lt;/span> &lt;span class="p">|&lt;/span>origin&lt;span class="p">|&lt;/span> %&amp;gt;
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s2">&amp;#34;&amp;lt;%= origin %&amp;gt;&amp;#34;&lt;/span>&lt;span class="p">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &amp;lt;% end %&amp;gt;
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="o">}&lt;/span>&lt;span class="p">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">// List of packages to not update
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">Unattended-Upgrade::Package-Blacklist &lt;span class="o">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s2">&amp;#34;apache2&amp;#34;&lt;/span>&lt;span class="p">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s2">&amp;#34;nginx&amp;#34;&lt;/span>&lt;span class="p">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">// &lt;span class="s2">&amp;#34;libc6-dev&amp;#34;&lt;/span>&lt;span class="p">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">// &lt;span class="s2">&amp;#34;libc6-i686&amp;#34;&lt;/span>&lt;span class="p">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="o">}&lt;/span>&lt;span class="p">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">// Send email to this address &lt;span class="k">for&lt;/span> problems or packages upgrades
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">// If empty or &lt;span class="nb">unset&lt;/span> &lt;span class="k">then&lt;/span> no email is sent, make sure that you
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">// have a working mail setup on your system. The package &lt;span class="s1">&amp;#39;mailx&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">// must be installed or anything that provides /usr/bin/mail.
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&amp;lt;%&lt;span class="o">=&lt;/span> node&lt;span class="o">[&lt;/span>&lt;span class="s1">&amp;#39;unattended-upgrades&amp;#39;&lt;/span>&lt;span class="o">][&lt;/span>&lt;span class="s1">&amp;#39;send_email&amp;#39;&lt;/span>&lt;span class="o">]&lt;/span> ? &lt;span class="s2">&amp;#34;&amp;#34;&lt;/span> : &lt;span class="s2">&amp;#34;// &amp;#34;&lt;/span> %&amp;gt;Unattended-Upgrade::Mail &lt;span class="s2">&amp;#34;&amp;lt;%= node[&amp;#39;unattended-upgrades&amp;#39;][&amp;#39;email_address&amp;#39;] %&amp;gt;&amp;#34;&lt;/span>&lt;span class="p">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">// Do automatic removal of new unused dependencies after the upgrade
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">// &lt;span class="o">(&lt;/span>equivalent to apt-get autoremove&lt;span class="o">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">Unattended-Upgrade::Remove-Unused-Dependencies &lt;span class="s2">&amp;#34;&amp;lt;%= node[&amp;#39;unattended-upgrades&amp;#39;][&amp;#39;auto_remove&amp;#39;] ? &amp;#34;&lt;/span>true&lt;span class="s2">&amp;#34; : &amp;#34;&lt;/span>false&lt;span class="s2">&amp;#34; %&amp;gt;&amp;#34;&lt;/span>&lt;span class="p">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">// Automatically reboot *WITHOUT CONFIRMATION* &lt;span class="k">if&lt;/span> a
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">// the file /var/run/reboot-required is found after the upgrade
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">Unattended-Upgrade::Automatic-Reboot &lt;span class="s2">&amp;#34;&amp;lt;%= node[&amp;#39;unattended-upgrades&amp;#39;][&amp;#39;auto_reboot&amp;#39;] ? &amp;#34;&lt;/span>true&lt;span class="s2">&amp;#34; : &amp;#34;&lt;/span>false&lt;span class="s2">&amp;#34; %&amp;gt;&amp;#34;&lt;/span>&lt;span class="p">;&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>&lt;code>templates/20auto-upgrades.erb&lt;/code>:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">APT::Periodic::Update-Package-Lists &lt;span class="s2">&amp;#34;&amp;lt;%=node[&amp;#39;unattended-upgrades&amp;#39;][&amp;#39;update_package_lists_interval&amp;#39;]%&amp;gt;&amp;#34;&lt;/span>&lt;span class="p">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">APT::Periodic::Unattended-Upgrade &lt;span class="s2">&amp;#34;&amp;lt;%=node[&amp;#39;unattended-upgrades&amp;#39;][&amp;#39;upgrade_interval&amp;#39;]%&amp;gt;&amp;#34;&lt;/span>&lt;span class="p">;&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>and&lt;/p>
+&lt;p>&lt;code>templates/yum-cron.conf.erb&lt;/code>:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">&lt;span class="nv">update_cmd&lt;/span> &lt;span class="o">=&lt;/span> security
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nv">apply_updates&lt;/span> &lt;span class="o">=&lt;/span> yes
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;span class="lnt">5
+&lt;/span>&lt;span class="lnt">6
+&lt;/span>&lt;span class="lnt">7
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">default&lt;span class="o">[&lt;/span>&lt;span class="s1">&amp;#39;unattended-upgrades&amp;#39;&lt;/span>&lt;span class="o">][&lt;/span>&lt;span class="s1">&amp;#39;update_package_lists_interval&amp;#39;&lt;/span>&lt;span class="o">]&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="s2">&amp;#34;1&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">default&lt;span class="o">[&lt;/span>&lt;span class="s1">&amp;#39;unattended-upgrades&amp;#39;&lt;/span>&lt;span class="o">][&lt;/span>&lt;span class="s1">&amp;#39;upgrade_interval&amp;#39;&lt;/span>&lt;span class="o">]&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="s2">&amp;#34;1&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">default&lt;span class="o">[&lt;/span>&lt;span class="s1">&amp;#39;unattended-upgrades&amp;#39;&lt;/span>&lt;span class="o">][&lt;/span>&lt;span class="s1">&amp;#39;origins&amp;#39;&lt;/span>&lt;span class="o">]&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="o">[&lt;/span>&lt;span class="s1">&amp;#39;${distro_id} ${distro_codename}-security&amp;#39;&lt;/span>&lt;span class="o">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">default&lt;span class="o">[&lt;/span>&lt;span class="s1">&amp;#39;unattended-upgrades&amp;#39;&lt;/span>&lt;span class="o">][&lt;/span>&lt;span class="s1">&amp;#39;send_email&amp;#39;&lt;/span>&lt;span class="o">]&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="nb">false&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">default&lt;span class="o">[&lt;/span>&lt;span class="s1">&amp;#39;unattended-upgrades&amp;#39;&lt;/span>&lt;span class="o">][&lt;/span>&lt;span class="s1">&amp;#39;email_address&amp;#39;&lt;/span>&lt;span class="o">]&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="s2">&amp;#34;test@example.com&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">default&lt;span class="o">[&lt;/span>&lt;span class="s1">&amp;#39;unattended-upgrades&amp;#39;&lt;/span>&lt;span class="o">][&lt;/span>&lt;span class="s1">&amp;#39;auto_remove&amp;#39;&lt;/span>&lt;span class="o">]&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="nb">false&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">default&lt;span class="o">[&lt;/span>&lt;span class="s1">&amp;#39;unattended-upgrades&amp;#39;&lt;/span>&lt;span class="o">][&lt;/span>&lt;span class="s1">&amp;#39;auto_reboot&amp;#39;&lt;/span>&lt;span class="o">]&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="nb">false&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>and of course, our inspec test in &lt;code>test/smoke/default/packages_test.rb&lt;/code>:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;span class="lnt">16
+&lt;/span>&lt;span class="lnt">17
+&lt;/span>&lt;span class="lnt">18
+&lt;/span>&lt;span class="lnt">19
+&lt;/span>&lt;span class="lnt">20
+&lt;/span>&lt;span class="lnt">21
+&lt;/span>&lt;span class="lnt">22
+&lt;/span>&lt;span class="lnt">23
+&lt;/span>&lt;span class="lnt">24
+&lt;/span>&lt;span class="lnt">25
+&lt;/span>&lt;span class="lnt">26
+&lt;/span>&lt;span class="lnt">27
+&lt;/span>&lt;span class="lnt">28
+&lt;/span>&lt;span class="lnt">29
+&lt;/span>&lt;span class="lnt">30
+&lt;/span>&lt;span class="lnt">31
+&lt;/span>&lt;span class="lnt">32
+&lt;/span>&lt;span class="lnt">33
+&lt;/span>&lt;span class="lnt">34
+&lt;/span>&lt;span class="lnt">35
+&lt;/span>&lt;span class="lnt">36
+&lt;/span>&lt;span class="lnt">37
+&lt;/span>&lt;span class="lnt">38
+&lt;/span>&lt;span class="lnt">39
+&lt;/span>&lt;span class="lnt">40
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-ruby" data-lang="ruby">&lt;span class="line">&lt;span class="cl">&lt;span class="k">if&lt;/span> &lt;span class="n">os&lt;/span>&lt;span class="o">[&lt;/span>&lt;span class="ss">:family&lt;/span>&lt;span class="o">]&lt;/span> &lt;span class="o">==&lt;/span> &lt;span class="s1">&amp;#39;debian&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">req_packages&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="o">[&lt;/span>&lt;span class="s1">&amp;#39;fail2ban&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s1">&amp;#39;gcc&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s1">&amp;#39;g++&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s1">&amp;#39;git&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s1">&amp;#39;htop&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s1">&amp;#39;make&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s1">&amp;#39;nodejs&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s1">&amp;#39;nmap&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s1">&amp;#39;npm&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s1">&amp;#39;sysstat&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s1">&amp;#39;unattended-upgrades&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s1">&amp;#39;apt-listchanges&amp;#39;&lt;/span>&lt;span class="o">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">req_packages&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">each&lt;/span> &lt;span class="k">do&lt;/span> &lt;span class="o">|&lt;/span>&lt;span class="n">packs&lt;/span>&lt;span class="o">|&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">describe&lt;/span> &lt;span class="n">package&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">packs&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="k">do&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">it&lt;/span> &lt;span class="p">{&lt;/span> &lt;span class="n">should&lt;/span> &lt;span class="n">be_installed&lt;/span> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">end&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">end&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">else&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">req_packages&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="o">[&lt;/span>&lt;span class="s1">&amp;#39;fail2ban&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s1">&amp;#39;gcc-c++&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s1">&amp;#39;git&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s1">&amp;#39;glibc-static&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s1">&amp;#39;htop&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s1">&amp;#39;make&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s1">&amp;#39;nodejs&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s1">&amp;#39;nmap&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s1">&amp;#39;npm&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s1">&amp;#39;sysstat&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s1">&amp;#39;yum-cron&amp;#39;&lt;/span>&lt;span class="o">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">req_packages&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">each&lt;/span> &lt;span class="k">do&lt;/span> &lt;span class="o">|&lt;/span>&lt;span class="n">packs&lt;/span>&lt;span class="o">|&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">describe&lt;/span> &lt;span class="n">package&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">packs&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="k">do&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">it&lt;/span> &lt;span class="p">{&lt;/span> &lt;span class="n">should&lt;/span> &lt;span class="n">be_installed&lt;/span> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">end&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">end&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">end&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;h6 id="installing-cloud-9-ide">Installing Cloud 9 IDE
+&lt;/h6>&lt;p>Chef has a built-in git resource that we can use to pull the Cloud 9 IDE code.&lt;/p>
+&lt;p>The test for this section will be rather brief:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-ruby" data-lang="ruby">&lt;span class="line">&lt;span class="cl">&lt;span class="n">describe&lt;/span> &lt;span class="n">directory&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;/home/c9ide/core/README.md&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="k">do&lt;/span> &lt;span class="c1"># describe this directory&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">its&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="ss">:content&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">{&lt;/span> &lt;span class="n">should&lt;/span> &lt;span class="n">match&lt;/span> &lt;span class="sr">/^Cloud9/&lt;/span> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">end&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>and the reason is that we can really verify whether or not this section succeeded in the next section on running via supervisor.&lt;/p>
+&lt;p>The code for this section, in &lt;code>/recipes/c9ide.rb&lt;/code>, is:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;span class="lnt">16
+&lt;/span>&lt;span class="lnt">17
+&lt;/span>&lt;span class="lnt">18
+&lt;/span>&lt;span class="lnt">19
+&lt;/span>&lt;span class="lnt">20
+&lt;/span>&lt;span class="lnt">21
+&lt;/span>&lt;span class="lnt">22
+&lt;/span>&lt;span class="lnt">23
+&lt;/span>&lt;span class="lnt">24
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-ruby" data-lang="ruby">&lt;span class="line">&lt;span class="cl">&lt;span class="n">git&lt;/span> &lt;span class="s2">&amp;#34;/home/c9ide/core&amp;#34;&lt;/span> &lt;span class="k">do&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">repository&lt;/span> &lt;span class="s1">&amp;#39;https://github.com/c9/core.git&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">reference&lt;/span> &lt;span class="s1">&amp;#39;master&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">action&lt;/span> &lt;span class="ss">:sync&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">end&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">case&lt;/span> &lt;span class="n">node&lt;/span>&lt;span class="o">[&lt;/span>&lt;span class="s1">&amp;#39;platform&amp;#39;&lt;/span>&lt;span class="o">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">when&lt;/span> &lt;span class="s1">&amp;#39;debian&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;ubuntu&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">bash&lt;/span> &lt;span class="s1">&amp;#39;create nodejs link&amp;#39;&lt;/span> &lt;span class="k">do&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">code&lt;/span> &lt;span class="s">&amp;lt;&amp;lt;-EOH
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="s">&lt;/span> &lt;span class="n">ln&lt;/span> &lt;span class="o">-&lt;/span>&lt;span class="n">s&lt;/span> &lt;span class="sr">/usr/&lt;/span>&lt;span class="n">bin&lt;/span>&lt;span class="o">/&lt;/span>&lt;span class="n">nodejs&lt;/span> &lt;span class="sr">/usr/&lt;/span>&lt;span class="n">bin&lt;/span>&lt;span class="o">/&lt;/span>&lt;span class="n">node&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="no">EOH&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">not_if&lt;/span> &lt;span class="p">{&lt;/span> &lt;span class="o">::&lt;/span>&lt;span class="no">File&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">exist?&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;/usr/bin/node&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">end&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">end&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">bash&lt;/span> &lt;span class="s1">&amp;#39;install_cloud9ide&amp;#39;&lt;/span> &lt;span class="k">do&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">cwd&lt;/span> &lt;span class="s1">&amp;#39;/home/c9ide/core/&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">user&lt;/span> &lt;span class="s1">&amp;#39;root&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">code&lt;/span> &lt;span class="s">&amp;lt;&amp;lt;-EOH
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="s">&lt;/span> &lt;span class="n">scripts&lt;/span>&lt;span class="o">/&lt;/span>&lt;span class="n">install&lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="n">sdk&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">sh&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="no">EOH&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">environment&lt;/span> &lt;span class="s1">&amp;#39;PREFIX&amp;#39;&lt;/span> &lt;span class="o">=&amp;gt;&lt;/span> &lt;span class="s1">&amp;#39;/usr/local&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">end&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;h6 id="installing-supervisor">Installing Supervisor
+&lt;/h6>&lt;p>Finally, we want to leave our server running Cloud 9 IDE after provisioning it. Supervisor is a fantastic way to do so, though of course not the only way and perhaps not even the best way, but it is a convenient and production-ready solution (though this development kit version of Cloud 9 IDE is not production material and is meant for development purposes).&lt;/p>
+&lt;p>In &lt;code>recipes/supervisor.rb&lt;/code>:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;span class="lnt">16
+&lt;/span>&lt;span class="lnt">17
+&lt;/span>&lt;span class="lnt">18
+&lt;/span>&lt;span class="lnt">19
+&lt;/span>&lt;span class="lnt">20
+&lt;/span>&lt;span class="lnt">21
+&lt;/span>&lt;span class="lnt">22
+&lt;/span>&lt;span class="lnt">23
+&lt;/span>&lt;span class="lnt">24
+&lt;/span>&lt;span class="lnt">25
+&lt;/span>&lt;span class="lnt">26
+&lt;/span>&lt;span class="lnt">27
+&lt;/span>&lt;span class="lnt">28
+&lt;/span>&lt;span class="lnt">29
+&lt;/span>&lt;span class="lnt">30
+&lt;/span>&lt;span class="lnt">31
+&lt;/span>&lt;span class="lnt">32
+&lt;/span>&lt;span class="lnt">33
+&lt;/span>&lt;span class="lnt">34
+&lt;/span>&lt;span class="lnt">35
+&lt;/span>&lt;span class="lnt">36
+&lt;/span>&lt;span class="lnt">37
+&lt;/span>&lt;span class="lnt">38
+&lt;/span>&lt;span class="lnt">39
+&lt;/span>&lt;span class="lnt">40
+&lt;/span>&lt;span class="lnt">41
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-ruby" data-lang="ruby">&lt;span class="line">&lt;span class="cl">&lt;span class="n">package&lt;/span> &lt;span class="s1">&amp;#39;supervisor&amp;#39;&lt;/span> &lt;span class="k">do&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">action&lt;/span> &lt;span class="ss">:install&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">end&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">case&lt;/span> &lt;span class="n">node&lt;/span>&lt;span class="o">[&lt;/span>&lt;span class="s1">&amp;#39;platform&amp;#39;&lt;/span>&lt;span class="o">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">when&lt;/span> &lt;span class="s1">&amp;#39;debian&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;ubuntu&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">cookbook_file&lt;/span> &lt;span class="s1">&amp;#39;/etc/supervisor/conf.d/cloud9ide.conf&amp;#39;&lt;/span> &lt;span class="k">do&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">source&lt;/span> &lt;span class="s1">&amp;#39;c9ide.conf&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">owner&lt;/span> &lt;span class="s1">&amp;#39;root&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">group&lt;/span> &lt;span class="s1">&amp;#39;root&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">mode&lt;/span> &lt;span class="s1">&amp;#39;0755&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">action&lt;/span> &lt;span class="ss">:create&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">end&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">execute&lt;/span> &lt;span class="s1">&amp;#39;start supervisor&amp;#39;&lt;/span> &lt;span class="k">do&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">command&lt;/span> &lt;span class="s1">&amp;#39;service supervisor start&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">end&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">execute&lt;/span> &lt;span class="s1">&amp;#39;reload supervisor&amp;#39;&lt;/span> &lt;span class="k">do&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">command&lt;/span> &lt;span class="s1">&amp;#39;supervisorctl update&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">end&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">when&lt;/span> &lt;span class="s1">&amp;#39;redhat&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;centos&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;fedora&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">cookbook_file&lt;/span> &lt;span class="s1">&amp;#39;/etc/supervisord.d/cloud9ide.ini&amp;#39;&lt;/span> &lt;span class="k">do&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">source&lt;/span> &lt;span class="s1">&amp;#39;c9ide.conf&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">owner&lt;/span> &lt;span class="s1">&amp;#39;root&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">group&lt;/span> &lt;span class="s1">&amp;#39;root&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">mode&lt;/span> &lt;span class="s1">&amp;#39;0755&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">action&lt;/span> &lt;span class="ss">:create&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">end&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">execute&lt;/span> &lt;span class="s1">&amp;#39;start supervisor&amp;#39;&lt;/span> &lt;span class="k">do&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">command&lt;/span> &lt;span class="s1">&amp;#39;service supervisord start&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">end&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">execute&lt;/span> &lt;span class="s1">&amp;#39;reload supervisor&amp;#39;&lt;/span> &lt;span class="k">do&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">command&lt;/span> &lt;span class="s1">&amp;#39;supervisorctl update&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">end&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">end&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>and finally add this to the &lt;code>c9ide_test.rb&lt;/code> test file:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-ruby" data-lang="ruby">&lt;span class="line">&lt;span class="cl">&lt;span class="n">describe&lt;/span> &lt;span class="n">port&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">9999&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="k">do&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">it&lt;/span> &lt;span class="p">{&lt;/span> &lt;span class="n">should&lt;/span> &lt;span class="n">be_listening&lt;/span> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">end&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;h5 id="putting-it-all-together">Putting it all together
+&lt;/h5>&lt;p>The default recipe should now look like this:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;span class="lnt">5
+&lt;/span>&lt;span class="lnt">6
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-ruby" data-lang="ruby">&lt;span class="line">&lt;span class="cl">&lt;span class="n">include_recipe&lt;/span> &lt;span class="s1">&amp;#39;c9_ide::update&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">include_recipe&lt;/span> &lt;span class="s1">&amp;#39;user::data_bag&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">include_recipe&lt;/span> &lt;span class="s1">&amp;#39;c9_ide::motd&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">include_recipe&lt;/span> &lt;span class="s1">&amp;#39;c9_ide::packages&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">include_recipe&lt;/span> &lt;span class="s1">&amp;#39;c9_ide::cloud9ide&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">include_recipe&lt;/span> &lt;span class="s1">&amp;#39;c9_ide::supervisor&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>we run a final &lt;code>kitchen converge&lt;/code>; if all goes well, we follow up with a final &lt;code>kitchen verify&lt;/code>:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;span class="lnt">16
+&lt;/span>&lt;span class="lnt">17
+&lt;/span>&lt;span class="lnt">18
+&lt;/span>&lt;span class="lnt">19
+&lt;/span>&lt;span class="lnt">20
+&lt;/span>&lt;span class="lnt">21
+&lt;/span>&lt;span class="lnt">22
+&lt;/span>&lt;span class="lnt">23
+&lt;/span>&lt;span class="lnt">24
+&lt;/span>&lt;span class="lnt">25
+&lt;/span>&lt;span class="lnt">26
+&lt;/span>&lt;span class="lnt">27
+&lt;/span>&lt;span class="lnt">28
+&lt;/span>&lt;span class="lnt">29
+&lt;/span>&lt;span class="lnt">30
+&lt;/span>&lt;span class="lnt">31
+&lt;/span>&lt;span class="lnt">32
+&lt;/span>&lt;span class="lnt">33
+&lt;/span>&lt;span class="lnt">34
+&lt;/span>&lt;span class="lnt">35
+&lt;/span>&lt;span class="lnt">36
+&lt;/span>&lt;span class="lnt">37
+&lt;/span>&lt;span class="lnt">38
+&lt;/span>&lt;span class="lnt">39
+&lt;/span>&lt;span class="lnt">40
+&lt;/span>&lt;span class="lnt">41
+&lt;/span>&lt;span class="lnt">42
+&lt;/span>&lt;span class="lnt">43
+&lt;/span>&lt;span class="lnt">44
+&lt;/span>&lt;span class="lnt">45
+&lt;/span>&lt;span class="lnt">46
+&lt;/span>&lt;span class="lnt">47
+&lt;/span>&lt;span class="lnt">48
+&lt;/span>&lt;span class="lnt">49
+&lt;/span>&lt;span class="lnt">50
+&lt;/span>&lt;span class="lnt">51
+&lt;/span>&lt;span class="lnt">52
+&lt;/span>&lt;span class="lnt">53
+&lt;/span>&lt;span class="lnt">54
+&lt;/span>&lt;span class="lnt">55
+&lt;/span>&lt;span class="lnt">56
+&lt;/span>&lt;span class="lnt">57
+&lt;/span>&lt;span class="lnt">58
+&lt;/span>&lt;span class="lnt">59
+&lt;/span>&lt;span class="lnt">60
+&lt;/span>&lt;span class="lnt">61
+&lt;/span>&lt;span class="lnt">62
+&lt;/span>&lt;span class="lnt">63
+&lt;/span>&lt;span class="lnt">64
+&lt;/span>&lt;span class="lnt">65
+&lt;/span>&lt;span class="lnt">66
+&lt;/span>&lt;span class="lnt">67
+&lt;/span>&lt;span class="lnt">68
+&lt;/span>&lt;span class="lnt">69
+&lt;/span>&lt;span class="lnt">70
+&lt;/span>&lt;span class="lnt">71
+&lt;/span>&lt;span class="lnt">72
+&lt;/span>&lt;span class="lnt">73
+&lt;/span>&lt;span class="lnt">74
+&lt;/span>&lt;span class="lnt">75
+&lt;/span>&lt;span class="lnt">76
+&lt;/span>&lt;span class="lnt">77
+&lt;/span>&lt;span class="lnt">78
+&lt;/span>&lt;span class="lnt">79
+&lt;/span>&lt;span class="lnt">80
+&lt;/span>&lt;span class="lnt">81
+&lt;/span>&lt;span class="lnt">82
+&lt;/span>&lt;span class="lnt">83
+&lt;/span>&lt;span class="lnt">84
+&lt;/span>&lt;span class="lnt">85
+&lt;/span>&lt;span class="lnt">86
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">-----&amp;gt; Starting Kitchen &lt;span class="o">(&lt;/span>v1.14.2&lt;span class="o">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">-----&amp;gt; Setting up &amp;lt;default-ubuntu-1604&amp;gt;...
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> Finished setting up &amp;lt;default-ubuntu-1604&amp;gt; &lt;span class="o">(&lt;/span>0m0.00s&lt;span class="o">)&lt;/span>.
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">-----&amp;gt; Verifying &amp;lt;default-ubuntu-1604&amp;gt;...
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> Loaded
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">Target: ssh://vagrant@127.0.0.1:2222
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> File /home/c9ide/core/README.md
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> ✔ content should match /^Cloud9/
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> Port &lt;span class="m">9999&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> ✔ should be listening
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> User c9ide
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> ✔ should exist
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> File /etc/motd
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> ✔ content should match /A Cloud &lt;span class="m">9&lt;/span> IDE server/
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> System Package
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> ✔ fail2ban should be installed
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> System Package
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> ✔ gcc should be installed
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> System Package
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> ✔ g++ should be installed
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> System Package
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> ✔ git should be installed
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> System Package
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> ✔ htop should be installed
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> System Package
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> ✔ make should be installed
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> System Package
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> ✔ nodejs should be installed
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> System Package
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> ✔ nmap should be installed
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> System Package
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> ✔ npm should be installed
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> System Package
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> ✔ sysstat should be installed
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> System Package
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> ✔ unattended-upgrades should be installed
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> System Package
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> ✔ apt-listchanges should be installed
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">Test Summary: &lt;span class="m">16&lt;/span> successful, &lt;span class="m">0&lt;/span> failures, &lt;span class="m">0&lt;/span> skipped
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> Finished verifying &amp;lt;default-ubuntu-1604&amp;gt; &lt;span class="o">(&lt;/span>0m1.28s&lt;span class="o">)&lt;/span>.
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">-----&amp;gt; Setting up &amp;lt;default-centos-72&amp;gt;...
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> Finished setting up &amp;lt;default-centos-72&amp;gt; &lt;span class="o">(&lt;/span>0m0.00s&lt;span class="o">)&lt;/span>.
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">-----&amp;gt; Verifying &amp;lt;default-centos-72&amp;gt;...
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> Loaded
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">Target: ssh://vagrant@127.0.0.1:2200
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> File /home/c9ide/core/README.md
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> ✔ content should match /^Cloud9/
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> Port &lt;span class="m">9999&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> ✔ should be listening
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> User c9ide
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> ✔ should exist
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> File /etc/motd
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> ✔ content should match /A Cloud &lt;span class="m">9&lt;/span> IDE server/
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> System Package
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> ✔ fail2ban should be installed
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> System Package
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> ✔ gcc-c++ should be installed
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> System Package
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> ✔ git should be installed
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> System Package
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> ✔ glibc-static should be installed
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> System Package
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> ✔ htop should be installed
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> System Package
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> ✔ make should be installed
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> System Package
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> ✔ nodejs should be installed
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> System Package
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> ✔ nmap should be installed
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> System Package
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> ✔ npm should be installed
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> System Package
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> ✔ sysstat should be installed
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> System Package
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> ✔ yum-cron should be installed
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">Test Summary: &lt;span class="m">15&lt;/span> successful, &lt;span class="m">0&lt;/span> failures, &lt;span class="m">0&lt;/span> skipped
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> Finished verifying &amp;lt;default-centos-72&amp;gt; &lt;span class="o">(&lt;/span>0m13.80s&lt;span class="o">)&lt;/span>.
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">-----&amp;gt; Kitchen is finished. &lt;span class="o">(&lt;/span>0m16.47s&lt;span class="o">)&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>Congratulations, you have a basic working chef recipe for installing Cloud 9 IDE, tested and provisioned on both major families of Linux.&lt;/p>
+&lt;h3 id="source-code">Source Code
+&lt;/h3>&lt;p>You can find the source code for this recipe on my github account &lt;a class="link" href="https://github.com/3implieschaos/c9_ide_chef/tree/PartI" target="_blank" rel="noopener"
+>here&lt;/a>.&lt;/p>
+&lt;h3 id="future-steps">Future Steps
+&lt;/h3>&lt;p>We took some shortcuts and avoided some best practices for convenience here. Ideally we would like some unit tests and to pull in more community recipes. For example, the supervisor chef cookbook could be used here instead of dealing with that in a platform case.&lt;/p>
+&lt;p>In the forthcoming Part II, we will use Puppet, a widely used alternative to Chef, to provision a server that runs the Cloud 9 IDE SDK as we have here with Chef.&lt;/p></description></item><item><title>Abstracting Networking with Docker Containers</title><link>https://tdj28.github.io/p/abstracting-networking-with-docker-containers/</link><pubDate>Thu, 03 Mar 2016 19:21:05 -0700</pubDate><guid>https://tdj28.github.io/p/abstracting-networking-with-docker-containers/</guid><description>&lt;h1 id="goal">Goal:
+&lt;/h1>&lt;p>Network Namespace is a Linux tool that allows for the easy virtualization of network models. While it has plenty of &lt;a class="link" href="http://blog.scottlowe.org/2013/09/04/introducing-linux-network-namespaces/" target="_blank" rel="noopener"
+>practical uses directly on the hardware&lt;/a>, this will be a quick introduction to how it can be used to create more complex Docker networks that could be extended to modeling, say, the infrastructure of a data center or cloud provider.&lt;/p>
+&lt;p>&lt;a class="link" href="https://github.com/brandon-rhodes/fopnp/tree/m/playground" target="_blank" rel="noopener"
+>Brandon Rhodes created&lt;/a> a great &amp;ldquo;playground&amp;rdquo; for his book &lt;a class="link" href="https://github.com/brandon-rhodes/fopnp" target="_blank" rel="noopener"
+>Foundations of Python Network Programming&lt;/a>. Inspired by this example, we will create a small simple netns/docker example that is more bite-sized for those who aren&amp;rsquo;t familiar with these tools.&lt;/p>
+&lt;h4 id="what-is-netns">What is NetNS?
+&lt;/h4>&lt;p>Very briefly, netns is a tool that allows us to create virtual network namespaces that are isolated from each other.&lt;/p>
+&lt;p>Let&amp;rsquo;s let its man page speak for itself:&lt;/p>
+&lt;blockquote>
+&lt;p>A network namespace is logically another copy of the network stack, with its own routes, firewall rules, and network devices.&lt;/p>
+&lt;/blockquote>
+&lt;blockquote>
+&lt;p>By default a process inherits its network namespace from its parent.Initially all the processes share the same default network namespace from the init process.&lt;/p>
+&lt;/blockquote>
+&lt;p>One&amp;rsquo;s imagination can fly away at this point thinking of the multitude of possibilities this offers for security, but that should be a focus of a separate entry.&lt;/p>
+&lt;p>Creating a new namespace, here let&amp;rsquo;s call it newtonsapple for the sake of example, is as easy as&lt;/p>
+&lt;pre>&lt;code>:::bash
+ip netns add newtonsapple
+&lt;/code>&lt;/pre>
+&lt;p>Of course there is much, much more to it than that, but we will see more details about what netns can do below.&lt;/p>
+&lt;h4 id="what-is-docker">What is Docker?
+&lt;/h4>&lt;p>Chances are pretty high that if you found this page, you have a pretty good idea of what Docker is. I will put it in the context of our netns discussion. In some ways, Docker is to the OS what netns is the machine&amp;rsquo;s networking configuration. Docker is a way to run processes in an isolated environment that does not use virtualization of hardware, but rather has direct access to the hardware via having direct access to the kernel. There are plenty of places out there that will provide fantastic introductions to Docker, but for the sake of this entry, it helps to think of netns and Docker as sort of cousins in that they both create isolated sandboxes which can interact in controlled ways with the &lt;em>real&lt;/em> OS/network outside of their bubbles (in the case of Docker this bubble is called a &lt;strong>container&lt;/strong> and in case of netns this bubble is called a &lt;strong>namespace&lt;/strong>).&lt;/p>
+&lt;h6 id="docker-networking">Docker Networking
+&lt;/h6>&lt;p>Docker has a great &lt;a class="link" href="https://docs.docker.com/engine/userguide/networking/" target="_blank" rel="noopener"
+>tutorial on Docker Networking&lt;/a> and it would be inefficient to recreate that here in any way. Instead I want to highlight the key parts that are relevant to this entry.&lt;/p>
+&lt;p>The first thing to note is that Docker automatically creates its own network. If you do an &lt;code>ifconfig&lt;/code> or an &lt;code>ip a&lt;/code> on a machine running a Docker server, you will find an entry corresponding to this network listed in the output:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">docker0 Link encap:Ethernet HWaddr 56:84:7a:fe:97:99
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> inet addr:172.17.42.1 Bcast:0.0.0.0 Mask:255.255.0.0
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> ...
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>Docker also creates a network internal to each container (loopback) and you can launch a container that hooks directly in to the host network (&lt;code>docker run --net=host&lt;/code>). The default is to launch it on the docker0 network, though it is often useful to run it on the host network if, for example, it needs access to VPN connections and it isn&amp;rsquo;t worth the effort to create further bridges. However, an interesting option is &lt;code>--net=none&lt;/code>. This tells Docker to not touch the networking of the container and allows us to create our own networking for the containers.&lt;/p>
+&lt;h4 id="using-netns-with-docker-to-model-your-home-network">Using NetNS with Docker to Model Your Home Network
+&lt;/h4>&lt;h6 id="preliminary-setup">Preliminary setup
+&lt;/h6>&lt;p>This post will assume you are working from Ubuntu/Debian, though any Linux distribution will have these tools.&lt;/p>
+&lt;p>On Ubuntu, you have to create a directory &lt;code>/var/run/netns&lt;/code> in order to use netns:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">sudo mkdir -p /var/run/netns
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>Though this wasn&amp;rsquo;t my experience, you may have to enable two Linux kernel modules as well:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">sudo modprobe ip_nat_ftp nf_conntrack_ftp
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>You may also need to install bridge-utils if it isn&amp;rsquo;t already installed:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">sudo apt-get update
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">sudo apt-get install bridge-utils
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;h6 id="bringing-up-the-containers-and-linking-netns">Bringing up the containers and linking netns
+&lt;/h6>&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">docker run --net&lt;span class="o">=&lt;/span>none --dns&lt;span class="o">=&lt;/span>8.8.8.8 --name&lt;span class="o">=&lt;/span>verizon -d ubuntu /bin/sh -c &lt;span class="s2">&amp;#34;while true; do echo &amp;#34;&amp;#34;; done&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nv">pid&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="k">$(&lt;/span>docker inspect -f &lt;span class="s1">&amp;#39;{{.State.Pid}}&amp;#39;&lt;/span> verizon&lt;span class="k">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">sudo ln -s /proc/&lt;span class="nv">$pid&lt;/span>/ns/net /var/run/netns/verizon
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">docker run --net&lt;span class="o">=&lt;/span>none --dns&lt;span class="o">=&lt;/span>8.8.8.8 --name&lt;span class="o">=&lt;/span>router -d ubuntu /bin/sh -c &lt;span class="s2">&amp;#34;while true; do echo &amp;#34;&amp;#34;; done&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nv">pid&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="k">$(&lt;/span>docker inspect -f &lt;span class="s1">&amp;#39;{{.State.Pid}}&amp;#39;&lt;/span> router&lt;span class="k">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">sudo ln -s /proc/&lt;span class="nv">$pid&lt;/span>/ns/net /var/run/netns/router
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">docker run --net&lt;span class="o">=&lt;/span>none --dns&lt;span class="o">=&lt;/span>8.8.8.8 --name&lt;span class="o">=&lt;/span>laptop -d ubuntu /bin/sh -c &lt;span class="s2">&amp;#34;while true; do echo &amp;#34;&amp;#34;; done&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nv">pid&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="k">$(&lt;/span>docker inspect -f &lt;span class="s1">&amp;#39;{{.State.Pid}}&amp;#39;&lt;/span> laptop&lt;span class="k">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">sudo ln -s /proc/&lt;span class="nv">$pid&lt;/span>/ns/net /var/run/netns/laptop
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;h6 id="creating-network-interfaces">Creating Network Interfaces
+&lt;/h6>&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;span class="lnt">16
+&lt;/span>&lt;span class="lnt">17
+&lt;/span>&lt;span class="lnt">18
+&lt;/span>&lt;span class="lnt">19
+&lt;/span>&lt;span class="lnt">20
+&lt;/span>&lt;span class="lnt">21
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">root@vagrant-ubuntu-trusty-64:~/code# ip netns &lt;span class="nb">exec&lt;/span> verizon ip link list
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">1: lo: &amp;lt;LOOPBACK,UP,LOWER_UP&amp;gt; mtu &lt;span class="m">65536&lt;/span> qdisc noqueue state UNKNOWN mode DEFAULT group default
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">10: eth1: &amp;lt;BROADCAST,MULTICAST&amp;gt; mtu &lt;span class="m">1500&lt;/span> qdisc noop state DOWN mode DEFAULT group default qlen &lt;span class="m">1000&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> link/ether f6:8b:e9:66:00:b0 brd ff:ff:ff:ff:ff:ff
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">root@vagrant-ubuntu-trusty-64:~/code# ip netns &lt;span class="nb">exec&lt;/span> router ip link list
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">1: lo: &amp;lt;LOOPBACK,UP,LOWER_UP&amp;gt; mtu &lt;span class="m">65536&lt;/span> qdisc noqueue state UNKNOWN mode DEFAULT group default
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">4: eth1: &amp;lt;BROADCAST,MULTICAST,UP,LOWER_UP&amp;gt; mtu &lt;span class="m">1500&lt;/span> qdisc pfifo_fast state UP mode DEFAULT group default qlen &lt;span class="m">1000&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> link/ether 36:7a:68:d8:a5:84 brd ff:ff:ff:ff:ff:ff
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">9: eth0: &amp;lt;NO-CARRIER,BROADCAST,MULTICAST,UP&amp;gt; mtu &lt;span class="m">1500&lt;/span> qdisc pfifo_fast state DOWN mode DEFAULT group default qlen &lt;span class="m">1000&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> link/ether fe:60:62:9d:1b:7b brd ff:ff:ff:ff:ff:ff
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">root@vagrant-ubuntu-trusty-64:~/code# ip netns &lt;span class="nb">exec&lt;/span> laptop ip link list
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">1: lo: &amp;lt;LOOPBACK,UP,LOWER_UP&amp;gt; mtu &lt;span class="m">65536&lt;/span> qdisc noqueue state UNKNOWN mode DEFAULT group default
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">7: eth1: &amp;lt;BROADCAST,MULTICAST,UP,LOWER_UP&amp;gt; mtu &lt;span class="m">1500&lt;/span> qdisc pfifo_fast state UP mode DEFAULT group default qlen &lt;span class="m">1000&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> link/ether f2:ee:9e:56:55:d4 brd ff:ff:ff:ff:ff:ff
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">root@vagrant-ubuntu-trusty-64:~/code# brctl show
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">bridge name bridge id STP enabled interfaces
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">docker0 8000.56847afe9799 no
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">home 8000.821c2640a1ea no laptop_eth1
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;span class="lnt">16
+&lt;/span>&lt;span class="lnt">17
+&lt;/span>&lt;span class="lnt">18
+&lt;/span>&lt;span class="lnt">19
+&lt;/span>&lt;span class="lnt">20
+&lt;/span>&lt;span class="lnt">21
+&lt;/span>&lt;span class="lnt">22
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">&lt;span class="c1">### Create network namespaces&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">ip netns add levela
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">ip netns add levelb
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">ip netns add levelc
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">### Create peer devices&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">ip link add veth0a &lt;span class="nb">type&lt;/span> veth peer name veth1a
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">ip link add veth0b &lt;span class="nb">type&lt;/span> veth peer name veth1b
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">ip link add veth0c &lt;span class="nb">type&lt;/span> veth peer name veth1c
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">### Put these devices in namespaces&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># veth0a remains in globalspace&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">ip link &lt;span class="nb">set&lt;/span> veth1a netns levela
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">ip link &lt;span class="nb">set&lt;/span> veth0b netns levela
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">ip link &lt;span class="nb">set&lt;/span> veth1b netns levelb
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">ip link &lt;span class="nb">set&lt;/span> veth0c netns levelb
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">ip link &lt;span class="nb">set&lt;/span> veth1c netns levelc
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">### Set up Networks&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">ip netns &lt;span class="nb">exec&lt;/span> levela ifconfig veth1a 172.16.1.0/24 up
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">ip netns &lt;span class="nb">exec&lt;/span> levelb ifconfig veth1b 10.1.1.1/24 up
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">ip netns &lt;span class="nb">exec&lt;/span> levelc ifconfig veth1c 192.168.1.1/24 up
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>At thist point we should be able to observer network namespaces and corresponding devices with their networks:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;span class="lnt">16
+&lt;/span>&lt;span class="lnt">17
+&lt;/span>&lt;span class="lnt">18
+&lt;/span>&lt;span class="lnt">19
+&lt;/span>&lt;span class="lnt">20
+&lt;/span>&lt;span class="lnt">21
+&lt;/span>&lt;span class="lnt">22
+&lt;/span>&lt;span class="lnt">23
+&lt;/span>&lt;span class="lnt">24
+&lt;/span>&lt;span class="lnt">25
+&lt;/span>&lt;span class="lnt">26
+&lt;/span>&lt;span class="lnt">27
+&lt;/span>&lt;span class="lnt">28
+&lt;/span>&lt;span class="lnt">29
+&lt;/span>&lt;span class="lnt">30
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># ip netns exec levela ip addr list&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">1: lo: &amp;lt;LOOPBACK&amp;gt; mtu &lt;span class="m">65536&lt;/span> qdisc noop state DOWN group default
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">6: veth1a: &amp;lt;NO-CARRIER,BROADCAST,MULTICAST,UP&amp;gt; mtu &lt;span class="m">1500&lt;/span> qdisc pfifo_fast state DOWN group default qlen &lt;span class="m">1000&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> link/ether ba:8c:ec:6e:71:db brd ff:ff:ff:ff:ff:ff
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> inet 172.16.1.0/24 brd 172.16.1.255 scope global veth1a
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> valid_lft forever preferred_lft forever
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">9: veth0b: &amp;lt;BROADCAST,MULTICAST&amp;gt; mtu &lt;span class="m">1500&lt;/span> qdisc noop state DOWN group default qlen &lt;span class="m">1000&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> link/ether 82:88:3d:09:e7:1f brd ff:ff:ff:ff:ff:ff
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># ip netns exec levelb ip addr list&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">1: lo: &amp;lt;LOOPBACK&amp;gt; mtu &lt;span class="m">65536&lt;/span> qdisc noop state DOWN group default
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">8: veth1b: &amp;lt;NO-CARRIER,BROADCAST,MULTICAST,UP&amp;gt; mtu &lt;span class="m">1500&lt;/span> qdisc pfifo_fast state DOWN group default qlen &lt;span class="m">1000&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> link/ether c2:c4:9c:2b:41:a5 brd ff:ff:ff:ff:ff:ff
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> inet 10.1.1.1/24 brd 10.1.1.255 scope global veth1b
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> valid_lft forever preferred_lft forever
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">11: veth0c: &amp;lt;BROADCAST,MULTICAST&amp;gt; mtu &lt;span class="m">1500&lt;/span> qdisc noop state DOWN group default qlen &lt;span class="m">1000&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> link/ether 96:a5:1c:5b:e3:8c brd ff:ff:ff:ff:ff:ff
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># ip netns exec levelc ip addr list&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">1: lo: &amp;lt;LOOPBACK&amp;gt; mtu &lt;span class="m">65536&lt;/span> qdisc noop state DOWN group default
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">10: veth1c: &amp;lt;NO-CARRIER,BROADCAST,MULTICAST,UP&amp;gt; mtu &lt;span class="m">1500&lt;/span> qdisc pfifo_fast state DOWN group default qlen &lt;span class="m">1000&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> link/ether 66:d7:ff:9b:65:63 brd ff:ff:ff:ff:ff:ff
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> inet 192.168.1.1/24 brd 192.168.1.255 scope global veth1c
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> valid_lft forever preferred_lft forever
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>and corresponding routes:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># ip netns exec levela ip route list&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">172.16.1.0/24 dev veth1a proto kernel scope link src 172.16.1.0
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># ip netns exec levelb ip route list&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">10.1.1.0/24 dev veth1b proto kernel scope link src 10.1.1.1
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># ip netns exec levelc ip route list&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">192.168.1.0/24 dev veth1c proto kernel scope link src 192.168.1.1
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div></description></item></channel></rss>

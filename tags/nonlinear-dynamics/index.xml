@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Nonlinear-Dynamics on</title><link>https://tdj28.github.io/tags/nonlinear-dynamics/</link><description>Recent content in Nonlinear-Dynamics on</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sun, 03 Jul 2022 19:21:05 -0700</lastBuildDate><atom:link href="https://tdj28.github.io/tags/nonlinear-dynamics/index.xml" rel="self" type="application/rss+xml"/><item><title>Rössler Strange Attractor with Python: Part 1</title><link>https://tdj28.github.io/p/r%C3%B6ssler-strange-attractor-with-python-part-1/</link><pubDate>Sun, 03 Jul 2022 19:21:05 -0700</pubDate><guid>https://tdj28.github.io/p/r%C3%B6ssler-strange-attractor-with-python-part-1/</guid><description>&lt;h2 id="introduction">Introduction
+&lt;/h2>&lt;p>One of the most popular and widely known strange attractors is the Rössler strange attractor. We will explore
+this mathematical object using Python in a series of blog posts. Before we go into any detail about what it is, what
+is a strange attractor, and so on, let&amp;rsquo;s first take a quick look at it using some simple Python code.&lt;/p>
+&lt;h2 id="simple-integration-using-eulers-method">Simple Integration using Euler&amp;rsquo;s method
+&lt;/h2>&lt;p>This is a quick intro, and hopefully part of a longer series on using Python to analyze the Rössler Strange Attractor.&lt;/p>
+&lt;p>We begin by importing the basic libraries that we will use as follows:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;span class="lnt">5
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="kn">import&lt;/span> &lt;span class="nn">numpy&lt;/span> &lt;span class="k">as&lt;/span> &lt;span class="nn">np&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">import&lt;/span> &lt;span class="nn">matplotlib&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="o">%&lt;/span>&lt;span class="n">matplotlib&lt;/span> &lt;span class="n">inline&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">import&lt;/span> &lt;span class="nn">matplotlib.pyplot&lt;/span> &lt;span class="k">as&lt;/span> &lt;span class="nn">plt&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">from&lt;/span> &lt;span class="nn">mpl_toolkits.mplot3d&lt;/span> &lt;span class="kn">import&lt;/span> &lt;span class="n">Axes3D&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;h3 id="define-rössler-system">Define Rössler System
+&lt;/h3>&lt;p>Next we define a python function which will define the Rössler equations for us to integrate and graph. The Rössler equestions are&lt;/p>
+&lt;p>$$ \dot{x} = -y -z $$
+$$ \dot{y} = x + ay $$
+$$ \dot{z} = b + z(x-c) $$&lt;/p>
+&lt;p>They function over a number of parameters, something we will explore in more detail in future posts. For now, let&amp;rsquo;s just pick a pretty common set of parameters:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;span class="lnt">5
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="k">def&lt;/span> &lt;span class="nf">rossler&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">x&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">y&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">z&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">a&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mf">0.2&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">b&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mf">0.2&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">c&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mf">5.7&lt;/span>&lt;span class="p">):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">x_dot&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="o">-&lt;/span> &lt;span class="n">y&lt;/span> &lt;span class="o">-&lt;/span> &lt;span class="n">z&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">y_dot&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">x&lt;/span> &lt;span class="o">+&lt;/span> &lt;span class="n">a&lt;/span>&lt;span class="o">*&lt;/span>&lt;span class="n">y&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">z_dot&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">b&lt;/span> &lt;span class="o">+&lt;/span> &lt;span class="n">z&lt;/span>&lt;span class="o">*&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">x&lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="n">c&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">return&lt;/span> &lt;span class="n">x_dot&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">y_dot&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">z_dot&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;h3 id="numerical-integration">Numerical Integration
+&lt;/h3>&lt;p>These equations can&amp;rsquo;t be solved for non-trivial sets of parameters, so we must integrate them numerically. Here, we use a very simpler Euler&amp;rsquo;s method of integration to get us out the door. This method is &lt;em>never&lt;/em> a good idea to use for non-trivial applications, but is a quick easy way to get started.&lt;/p>
+&lt;p>Euler&amp;rsquo;s method makes use of the definition of a derivative:&lt;/p>
+&lt;p>$$\dot{x} = \frac{dx}{dt} = \lim_{\Delta \rightarrow 0} \frac{\Delta x}{\Delta t} $$&lt;/p>
+&lt;p>To create a simplistic way to numerical integrate where:&lt;/p>
+&lt;p>$$ \Delta x = \dot{x} \Delta t $$&lt;/p>
+&lt;p>This isn&amp;rsquo;t very accurate over the long term, but with small enough $\Delta t$ can give a fair approximation in the short term. For this simple demo, we choose to let $dt = 0.05 s$ and choose to plot 1000 points for a total of 50 seconds of data.&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="n">dt&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="mf">0.05&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">stepCnt&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="mi">1000&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>Next we set up NUMPY arrays that will hold the 1000 points for each dimension, and then set intitial values (what initial values to use will be explained in more detail in a post where we discuss the parameters as well).&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Need one more for the initial values&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">xs&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">np&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">empty&lt;/span>&lt;span class="p">((&lt;/span>&lt;span class="n">stepCnt&lt;/span> &lt;span class="o">+&lt;/span> &lt;span class="mi">1&lt;/span>&lt;span class="p">,))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">ys&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">np&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">empty&lt;/span>&lt;span class="p">((&lt;/span>&lt;span class="n">stepCnt&lt;/span> &lt;span class="o">+&lt;/span> &lt;span class="mi">1&lt;/span>&lt;span class="p">,))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">zs&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">np&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">empty&lt;/span>&lt;span class="p">((&lt;/span>&lt;span class="n">stepCnt&lt;/span> &lt;span class="o">+&lt;/span> &lt;span class="mi">1&lt;/span>&lt;span class="p">,))&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Setting initial values&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">xs&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">],&lt;/span> &lt;span class="n">ys&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">],&lt;/span> &lt;span class="n">zs&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">]&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="mf">0.1&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mf">1.&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mf">1.05&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>Next, we run the Euler&amp;rsquo;s method integration to populate the arrays:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;span class="lnt">5
+&lt;/span>&lt;span class="lnt">6
+&lt;/span>&lt;span class="lnt">7
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Stepping through &amp;#34;time&amp;#34;.&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">for&lt;/span> &lt;span class="n">i&lt;/span> &lt;span class="ow">in&lt;/span> &lt;span class="nb">range&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">stepCnt&lt;/span>&lt;span class="p">):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># Derivatives of the X, Y, Z state&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">x_dot&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">y_dot&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">z_dot&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">rossler&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">xs&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">i&lt;/span>&lt;span class="p">],&lt;/span> &lt;span class="n">ys&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">i&lt;/span>&lt;span class="p">],&lt;/span> &lt;span class="n">zs&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">i&lt;/span>&lt;span class="p">])&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">xs&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">i&lt;/span> &lt;span class="o">+&lt;/span> &lt;span class="mi">1&lt;/span>&lt;span class="p">]&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">xs&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">i&lt;/span>&lt;span class="p">]&lt;/span> &lt;span class="o">+&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="n">x_dot&lt;/span> &lt;span class="o">*&lt;/span> &lt;span class="n">dt&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">ys&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">i&lt;/span> &lt;span class="o">+&lt;/span> &lt;span class="mi">1&lt;/span>&lt;span class="p">]&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">ys&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">i&lt;/span>&lt;span class="p">]&lt;/span> &lt;span class="o">+&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="n">y_dot&lt;/span> &lt;span class="o">*&lt;/span> &lt;span class="n">dt&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">zs&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">i&lt;/span> &lt;span class="o">+&lt;/span> &lt;span class="mi">1&lt;/span>&lt;span class="p">]&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">zs&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">i&lt;/span>&lt;span class="p">]&lt;/span> &lt;span class="o">+&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="n">z_dot&lt;/span> &lt;span class="o">*&lt;/span> &lt;span class="n">dt&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;h3 id="plot">Plot
+&lt;/h3>&lt;p>Our final step is to plot the results so that we can see the &lt;code>trajectory&lt;/code> of the Rössler system over these 50 seconds of integration.&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;span class="lnt">5
+&lt;/span>&lt;span class="lnt">6
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="n">fig&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">figure&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">ax&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">axes&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">projection&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;3d&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">ax&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">plot3D&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">xs&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">ys&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">zs&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;gray&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">xlabel&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;x&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">ylabel&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;y&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">title&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;Rössler&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>&lt;img src="https://tdj28.github.io/p/r%C3%B6ssler-strange-attractor-with-python-part-1/output_12_1.png"
+width="389"
+height="395"
+srcset="https://tdj28.github.io/p/r%C3%B6ssler-strange-attractor-with-python-part-1/output_12_1_hu17117271777237347749.png 480w, https://tdj28.github.io/p/r%C3%B6ssler-strange-attractor-with-python-part-1/output_12_1_hu17958261959640466852.png 1024w"
+loading="lazy"
+alt="png"
+class="gallery-image"
+data-flex-grow="98"
+data-flex-basis="236px"
+>&lt;/p></description></item></channel></rss>

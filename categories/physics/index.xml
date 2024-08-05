@@ -1,0 +1,799 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Physics on</title><link>https://tdj28.github.io/categories/physics/</link><description>Recent content in Physics on</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sat, 23 Jul 2022 15:21:05 -0700</lastBuildDate><atom:link href="https://tdj28.github.io/categories/physics/index.xml" rel="self" type="application/rss+xml"/><item><title>Automating the circularization of Apollo in Kerbal with python, KRPC, and Physics</title><link>https://tdj28.github.io/p/automating-the-circularization-of-apollo-in-kerbal-with-python-krpc-and-physics/</link><pubDate>Sat, 23 Jul 2022 15:21:05 -0700</pubDate><guid>https://tdj28.github.io/p/automating-the-circularization-of-apollo-in-kerbal-with-python-krpc-and-physics/</guid><description>&lt;p>&lt;img src="https://tdj28.github.io/p/automating-the-circularization-of-apollo-in-kerbal-with-python-krpc-and-physics/assets/index-02bb3.png"
+width="826"
+height="400"
+srcset="https://tdj28.github.io/p/automating-the-circularization-of-apollo-in-kerbal-with-python-krpc-and-physics/assets/index-02bb3_hu17640899176375355365.png 480w, https://tdj28.github.io/p/automating-the-circularization-of-apollo-in-kerbal-with-python-krpc-and-physics/assets/index-02bb3_hu17225187193578015173.png 1024w"
+loading="lazy"
+alt="A picture of the kerbal apollo rocket"
+class="gallery-image"
+data-flex-grow="206"
+data-flex-basis="495px"
+>&lt;/p>
+&lt;p>&lt;a class="link" href="krpc_sanbox-into-orbit.ipynb" >Download&lt;/a> the corresponding notebook.&lt;/p>
+&lt;h2 id="introduction">Introduction
+&lt;/h2>&lt;p>Kerbal Space Program (KSP) (1.0) is a semi-physics-realistic space exploration simulation. While it is not realistic enough to plan actual space missions, it is a fun educational tool that can get us started. With the kRPC mod (remote procedure call, which enables programatic interaction with KSP&amp;rsquo;s API), the educational potential is expanded into the world of programming. In this notebook, we will automate taking the Kerbins to the moon and back using Python, Physics, and KSP with the kRPC mod.&lt;/p>
+&lt;h3 id="installation">Installation
+&lt;/h3>&lt;h4 id="get-ksp">Get KSP
+&lt;/h4>&lt;ul>
+&lt;li>Purchase and install the Kerbal Space Program (v 1.0) &lt;a class="link" href="https://www.kerbalspaceprogram.com/" target="_blank" rel="noopener"
+>here&lt;/a>.&lt;/li>
+&lt;li>You&amp;rsquo;ll also need the &lt;a class="link" href="https://www.kerbalspaceprogram.com/games-kerbal-space-program-making-history-expansion" target="_blank" rel="noopener"
+>&amp;ldquo;Making History&amp;rdquo; expansion&lt;/a> which has the Apollo rocket equivalent, unless you prefer to save some money and build an equivalent rocket yourself or find the ship file online. Note that this code is tested and verified to work with the Acopollo rocket found in this expansion, so you may have to make adjustments to get alternative rockets to work.&lt;/li>
+&lt;/ul>
+&lt;h4 id="install-the-krpc-mod">Install the KRPC mod
+&lt;/h4>&lt;p>Follow &lt;a class="link" href="https://krpc.github.io/krpc/getting-started.html" target="_blank" rel="noopener"
+>this guide&lt;/a> to install the kRPC mod. More or less, you&amp;rsquo;ll grab the kRPC folder and put it in the &lt;code>GameData&lt;/code> folder wherever Kerbal is installed on your workstation.&lt;/p>
+&lt;p>&lt;img src="https://tdj28.github.io/p/automating-the-circularization-of-apollo-in-kerbal-with-python-krpc-and-physics/assets/index-439c4.png"
+width="735"
+height="323"
+srcset="https://tdj28.github.io/p/automating-the-circularization-of-apollo-in-kerbal-with-python-krpc-and-physics/assets/index-439c4_hu2563673172473898305.png 480w, https://tdj28.github.io/p/automating-the-circularization-of-apollo-in-kerbal-with-python-krpc-and-physics/assets/index-439c4_hu12312013963594548964.png 1024w"
+loading="lazy"
+alt="An image that shows the folder structure of KSP on Windows"
+class="gallery-image"
+data-flex-grow="227"
+data-flex-basis="546px"
+>&lt;/p>
+&lt;h4 id="prepping-the-jupyter-workspace">Prepping the jupyter workspace
+&lt;/h4>&lt;p>If you are using Windows, &lt;a class="link" href="https://docs.anaconda.com/anaconda/install/windows/" target="_blank" rel="noopener"
+>installing anaconda&lt;/a> may be your quickest route, and then set up a kerbal environment by opensing a terminal and running:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-fallback" data-lang="fallback">&lt;span class="line">&lt;span class="cl">conda create --name kerbal
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>You&amp;rsquo;ll only need to create the envrionment once. Next activate it:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-fallback" data-lang="fallback">&lt;span class="line">&lt;span class="cl">conda activate kerbal
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>If you are on MacOS or Linux, you can use virtualenv instead (although conda can work too).&lt;/p>
+&lt;p>and then install the following packages:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;span class="lnt">5
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-gdscript3" data-lang="gdscript3">&lt;span class="line">&lt;span class="cl">&lt;span class="n">pip&lt;/span> &lt;span class="n">install&lt;/span> &lt;span class="n">setuptools&lt;/span>&lt;span class="o">==&lt;/span>&lt;span class="mf">57.5&lt;/span>&lt;span class="o">.&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">pip&lt;/span> &lt;span class="n">install&lt;/span> &lt;span class="n">protobuf&lt;/span>&lt;span class="o">~=&lt;/span>&lt;span class="mf">3.19&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="mi">0&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">pip&lt;/span> &lt;span class="n">install&lt;/span> &lt;span class="n">krpc&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">pip&lt;/span> &lt;span class="n">install&lt;/span> &lt;span class="n">jupyter&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">pip&lt;/span> &lt;span class="n">install&lt;/span> &lt;span class="n">ipykernel&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>Or preferably, use a requirements file:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;span class="lnt">5
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-gdscript3" data-lang="gdscript3">&lt;span class="line">&lt;span class="cl">&lt;span class="n">setuptools&lt;/span>&lt;span class="o">==&lt;/span>&lt;span class="mf">57.5&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="mi">0&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">protobuf&lt;/span>&lt;span class="o">~=&lt;/span>&lt;span class="mf">3.19&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="mi">0&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">krpc&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">jupyter&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">ipykernel&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>If you are using Python &amp;gt;= 3.8, you&amp;rsquo;ll have to do a little hack. Open the file in your virtual environment files with an editor and make the following change.&lt;/p>
+&lt;ul>
+&lt;li>
+&lt;p>FILE: Should be in your virtual environment with something along the lines of &lt;code>venv/lib/python3.10/site-packages/krpc/types.py&lt;/code> on line 222 and 227.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Replace:&lt;/p>
+&lt;/li>
+&lt;/ul>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="n">collections&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">Iterable&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>with&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="n">collections&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">abc&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">Iterable&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>Next, create the kernel that we&amp;rsquo;ll be using for this notebook:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-fallback" data-lang="fallback">&lt;span class="line">&lt;span class="cl">python -m ipykernel install --user --name kerbal --display-name &amp;#34;Python (kerbal)&amp;#34;
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>and then to launch jupyter:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-fallback" data-lang="fallback">&lt;span class="line">&lt;span class="cl">jupyter notebook
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;h2 id="going-to-the-mun">Going to the Mun
+&lt;/h2>&lt;h3 id="connecting-to-ksp">Connecting to KSP
+&lt;/h3>&lt;p>In our first code blocks, we will be importing the libraries we need to get our astronauts to the Mun via Python. We will then connect to KSP vis the krpc plugin (assumes you have KSP up and running and the plugin working).&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="kn">import&lt;/span> &lt;span class="nn">krpc&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">import&lt;/span> &lt;span class="nn">math&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">import&lt;/span> &lt;span class="nn">time&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">from&lt;/span> &lt;span class="nn">IPython.display&lt;/span> &lt;span class="kn">import&lt;/span> &lt;span class="n">clear_output&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">display&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="n">conn&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">krpc&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">connect&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;h3 id="loading-the-apollo-rocket">Loading the Apollo rocket
+&lt;/h3>&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="n">conn&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">space_center&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">load&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s2">&amp;#34;apollo001&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;span class="lnt">5
+&lt;/span>&lt;span class="lnt">6
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="n">vessel&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">conn&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">space_center&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">active_vessel&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Set up streams for telemetry&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">ut&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">conn&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">add_stream&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nb">getattr&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">conn&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">space_center&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;ut&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">altitude&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">conn&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">add_stream&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nb">getattr&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">flight&lt;/span>&lt;span class="p">(),&lt;/span> &lt;span class="s1">&amp;#39;mean_altitude&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">apoapsis&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">conn&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">add_stream&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nb">getattr&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">orbit&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;apoapsis_altitude&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">stage_2_resources&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">resources_in_decouple_stage&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">stage&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mi">2&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">cumulative&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="kc">False&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="n">obt_frame&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">orbit&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">body&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">non_rotating_reference_frame&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">mun_orbit&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">conn&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">space_center&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">bodies&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s2">&amp;#34;Mun&amp;#34;&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">position&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">obt_frame&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;h3 id="gravity-turn-into-orbit">Gravity Turn into Orbit
+&lt;/h3>&lt;p>In this next section, we are calculating the gravity turn angle. The sample provided by the KRPC samples uses a simple fraction to define the trun angle in degrees:
+\[ \alpha = 90(\frac{a - s}{ e - s}) \]
+where \(a\) is the current altitude, \(s\) is the altitude in which we want to start slowly turning the rocket horizontally, and \(e\) is the ending altitude where we want to have completed our turn upon reaching. This could be defined by a simple function&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="k">def&lt;/span> &lt;span class="nf">get_gravity_turn_angle&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">alt&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">start_alt&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">end_alt&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">turn_angle&lt;/span>&lt;span class="p">):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">new_turn_angle&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="mi">0&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="n">alt&lt;/span> &lt;span class="o">&amp;gt;&lt;/span> &lt;span class="n">start_alt&lt;/span> &lt;span class="ow">and&lt;/span> &lt;span class="n">alt&lt;/span> &lt;span class="o">&amp;lt;&lt;/span> &lt;span class="n">end_alt&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">frac&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="n">alt&lt;/span> &lt;span class="o">-&lt;/span> &lt;span class="n">start_alt&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="o">/&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">end_alt&lt;/span> &lt;span class="o">-&lt;/span> &lt;span class="n">start_alt&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">new_turn_angle&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">frac&lt;/span> &lt;span class="o">*&lt;/span> &lt;span class="mf">90.0&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nb">abs&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">new_turn_angle&lt;/span> &lt;span class="o">-&lt;/span> &lt;span class="n">turn_angle&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="o">&amp;gt;&lt;/span> &lt;span class="mf">0.5&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">turn_angle&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">new_turn_angle&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">else&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">turn_angle&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="mi">0&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">return&lt;/span> &lt;span class="n">turn_angle&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>In a future blog post, we will improve the gravity turn by invoking Physics to get a more accurate turn rate. For now, as a proof of concept and to focus on the circularization physics, we will proceed with this rough linear gravity turn. Next, we actually launch the rocket and execute the gravity turn so that we reach a target apoapsis:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">auto_pilot&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">target_pitch_and_heading&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">90&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">90&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">auto_pilot&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">engage&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">control&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">throttle&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="mi">1&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;span class="lnt">16
+&lt;/span>&lt;span class="lnt">17
+&lt;/span>&lt;span class="lnt">18
+&lt;/span>&lt;span class="lnt">19
+&lt;/span>&lt;span class="lnt">20
+&lt;/span>&lt;span class="lnt">21
+&lt;/span>&lt;span class="lnt">22
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">control&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">activate_next_stage&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">turn_angle&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="mi">0&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">start_alt&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="mi">250&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">end_alt&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="mi">45000&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">target_alt&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="mi">700000&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">state&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="s2">&amp;#34;LiftOff&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">while&lt;/span> &lt;span class="n">turn_angle&lt;/span> &lt;span class="o">&amp;gt;=&lt;/span> &lt;span class="mi">0&lt;/span> &lt;span class="ow">and&lt;/span> &lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">control&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">throttle&lt;/span> &lt;span class="o">&amp;gt;&lt;/span> &lt;span class="mi">0&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">clear_output&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">wait&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="kc">True&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">turn_angle&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">get_gravity_turn_angle&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">altitude&lt;/span>&lt;span class="p">(),&lt;/span> &lt;span class="n">start_alt&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">end_alt&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">turn_angle&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="n">turn_angle&lt;/span> &lt;span class="o">!=&lt;/span> &lt;span class="mi">0&lt;/span> &lt;span class="ow">and&lt;/span> &lt;span class="n">apoapsis&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="o">&amp;lt;&lt;/span> &lt;span class="n">target_alt&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">auto_pilot&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">target_pitch_and_heading&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">90&lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="n">turn_angle&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">90&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">state&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="s2">&amp;#34;GravityTurn&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="n">apoapsis&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="o">&amp;gt;&lt;/span> &lt;span class="n">target_alt&lt;/span>&lt;span class="o">*&lt;/span>&lt;span class="mf">0.90&lt;/span> &lt;span class="ow">and&lt;/span> &lt;span class="n">apoapsis&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="o">&amp;lt;&lt;/span> &lt;span class="n">target_alt&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">state&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="s2">&amp;#34;ApoapsisRefinement&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">control&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">throttle&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="mf">0.25&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">while&lt;/span> &lt;span class="n">apoapsis&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="o">&amp;lt;&lt;/span> &lt;span class="n">target_alt&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">pass&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="n">apoapsis&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="o">&amp;gt;=&lt;/span> &lt;span class="n">target_alt&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">state&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="s2">&amp;#34;GoalApoapsisAchieved&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">control&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">throttle&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="mf">0.00&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>&lt;img src="https://tdj28.github.io/p/automating-the-circularization-of-apollo-in-kerbal-with-python-krpc-and-physics/assets/index-41f20.png"
+width="989"
+height="555"
+srcset="https://tdj28.github.io/p/automating-the-circularization-of-apollo-in-kerbal-with-python-krpc-and-physics/assets/index-41f20_hu7997958309861504924.png 480w, https://tdj28.github.io/p/automating-the-circularization-of-apollo-in-kerbal-with-python-krpc-and-physics/assets/index-41f20_hu15015125646027603701.png 1024w"
+loading="lazy"
+alt="The rocket starts to turn, making a 30 degree angle relative to the normal"
+class="gallery-image"
+data-flex-grow="178"
+data-flex-basis="427px"
+>&lt;/p>
+&lt;p>As the rocket climbs higher, it will ease into an orientation perpendicular to the radius of the Earth:&lt;/p>
+&lt;p>&lt;img src="https://tdj28.github.io/p/automating-the-circularization-of-apollo-in-kerbal-with-python-krpc-and-physics/assets/index-a87dd.png"
+width="993"
+height="559"
+srcset="https://tdj28.github.io/p/automating-the-circularization-of-apollo-in-kerbal-with-python-krpc-and-physics/assets/index-a87dd_hu8397308396075874361.png 480w, https://tdj28.github.io/p/automating-the-circularization-of-apollo-in-kerbal-with-python-krpc-and-physics/assets/index-a87dd_hu11992571244312514553.png 1024w"
+loading="lazy"
+alt="as it nears cutoff, the rocket is nearly perpendicular to the normal"
+class="gallery-image"
+data-flex-grow="177"
+data-flex-basis="426px"
+>&lt;/p>
+&lt;h2 id="circularizing-the-orbit">Circularizing the orbit
+&lt;/h2>&lt;p>For an idealized circular orbit above atmospheric effects, the gravitational pull of the Earth on the body provides the centripetal force, with circular orbital radius \(r\) and let&lt;/p>
+&lt;p>\[\mu = GM\]&lt;/p>
+&lt;p>where \(G\) is the universal gravitational constant and \(M\) is the mass of the large body (here, the Earth)&lt;/p>
+&lt;p>KRPC provides an easy way to access that value for any given celestial body:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="n">mu&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">orbit&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">body&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">gravitational_parameter&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>Back to Physics, we now have two equations from the basics of Newtonian physics, namely:&lt;/p>
+&lt;ul>
+&lt;li>Cetripital Force: \[ F_c = \frac{m_0 v^2}{r}\]&lt;/li>
+&lt;li>Gravitational Force: \[ F_g = \frac{m_0 GM}{r^2}\]&lt;/li>
+&lt;/ul>
+&lt;p>Since these must balance out for an object to be in stead orbit, we can solve to find the ideal velocity \(v\) for a given orbit at radius \(r\):&lt;/p>
+&lt;p>\[ F_g = m_0 a = \frac{m_0 \mu}{r^2} =\frac{m_0 v^2}{r} \]&lt;/p>
+&lt;p>\[\implies v = \sqrt{ \frac{\mu}{r} }\]&lt;/p>
+&lt;p>We see here that this velocity is entirely independent of the mass of the body, hence a very heavy object and a very light object which orbit at the same radius must be traveling at the same speed, assuming of course they are out of the region where atmospheric drag plays an important role.&lt;/p>
+&lt;h3 id="finding-an-equation-for-the-circularization-of-an-orbit">Finding an equation for the circularization of an orbit
+&lt;/h3>&lt;p>That is a starting point, but we have to dive deeper to calculate the numbers needed to actually achieve an approximation of this idealized orbit.&lt;/p>
+&lt;p>Our next step is to invoke the &lt;em>vis-viva equation&lt;/em> (or also called the &lt;em>orbital-energy-invariance law&lt;/em>). We begin by noting that the &lt;strong>specific orbital energy&lt;/strong> of an orbiting object and the body it is orbiting is defined as a sum of their mutual potential energy and their total kinetic energy:&lt;/p>
+&lt;p>\[ E_O = E_p + E_k\]&lt;/p>
+&lt;p>For scenarios such as ours, where the orbiting object is much smaller in both size and mass than the body it orbits, this energy becomes easier to calculate since we can treat the larger body as being the center of our reference frame and hence at rest. We can also neglect the potential energy experienced by the gravitational attraction of the larger body by the smaller body. In this case,&lt;/p>
+&lt;p>\[ E_O = \frac{m_0 v^2_0}{2} - \frac{\mu m_0}{r_0} \]&lt;/p>
+&lt;p>The specific total energy is given as \(E_o/m_0 = \epsilon\) and this is conserved throughout the orbit (assuming the rocket is not burning fuel in an idealized orbit). Let \(v_a\) and \(r_a\) be the velocity and radius of the orbiting body at the apoapsis, and \(v_p\) and \(r_p\) similarly at the periapsis. Then energy conservation gives us the relation,&lt;/p>
+&lt;p>\[ \epsilon = \frac{v_a^2}{2} - \frac{\mu}{r_a} = \frac{v_p^2}{2} - \frac{\mu}{r_p} \]&lt;/p>
+&lt;p>At both \(r_a\) and \(r_p\), the velocity and radius vectors are perpendicular to each other, where hence we can invoke the conservation of angular momentum to give&lt;/p>
+&lt;p>\[ r_p v_p = r_a v_a = Constant \]&lt;/p>
+&lt;p>This gives us the relation that
+\[ v_p =- \frac{r_a}{r_p}v_a \]&lt;/p>
+&lt;p>and with some rearrangement of these equations, we get,&lt;/p>
+&lt;p>\[ \frac{1}{2}\left( \frac{r_p^2 -r_a^2}{r_p^2}\right) v_a^2 = \mu \left(\frac{1}{r_a} - \frac{1}{r_p}\right) \]
+\[ \frac{1}{2}v_a^2 = \mu \frac{r_p}{r_a \left( r_p + r_a \right)} \]&lt;/p>
+&lt;h4 id="relating-this-to-elipses-the-apoapsis-and-periapsis">Relating this to elipses, the apoapsis and periapsis
+&lt;/h4>&lt;p>From geometry of an ellipse that relates the semimajor axis to \(r_p\) and \(r_a\), \(2a = r_p + r_a\)&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="n">r&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">orbit&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">apoapsis&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">a1&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">orbit&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">semi_major_axis&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>We substitute 2a in the our prior kinetic energy equation:
+\[ \frac{1}{2}v_a^2 = \mu \frac{2a -r_a}{2 r_a a} \]
+\[ \frac{1}{2}v_a^2 = \mu \left(\frac{1}{r_a} - \frac{1}{2a}\right) \]&lt;/p>
+&lt;p>\[ v_a^2 = \mu \left( \frac{2}{r_a} - \frac{1}{a}\right) \]&lt;/p>
+&lt;p>In a circularized orbit, \(a = r\), and so the velocity we need to have is&lt;/p>
+&lt;p>\[ v_a^2 = \mu \left( \frac{2}{r_a} - \frac{1}{r_a}\right) = \mu \left( \frac{1}{r_a}\right) \]&lt;/p>
+&lt;p>The \(\Delta v\) we need to achieve is the difference between these two velocities,&lt;/p>
+&lt;p>$$ \Delta v = \sqrt{ \mu} \left( \sqrt{\left( \frac{1}{r_a}\right) } - \sqrt{\left( \frac{2}{r_a} - \frac{1}{a}\right)}\right) $$
+$$ = \sqrt{\frac{\mu}{r_a}}\left( 1 - \sqrt{ \frac{2a -r_a}{a}}\right) $$&lt;/p>
+&lt;p>In krpc code,&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="n">delta_v&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">math&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">sqrt&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">mu&lt;/span>&lt;span class="o">/&lt;/span>&lt;span class="n">r&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="o">*&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="n">math&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">sqrt&lt;/span>&lt;span class="p">((&lt;/span>&lt;span class="mi">2&lt;/span>&lt;span class="o">*&lt;/span>&lt;span class="n">a1&lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="n">r&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="o">/&lt;/span>&lt;span class="n">a1&lt;/span>&lt;span class="p">))&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>With this number in hand, we can do a little more math which will be discussed in more detail later to find the burn time. This calculation is highly dependent on the engine and design of the rocket in question:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;span class="lnt">5
+&lt;/span>&lt;span class="lnt">6
+&lt;/span>&lt;span class="lnt">7
+&lt;/span>&lt;span class="lnt">8
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="n">f&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">available_thrust&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">Isp&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">specific_impulse&lt;/span> &lt;span class="o">*&lt;/span> &lt;span class="mf">9.82&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">m0&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">mass&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">m1&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">m0&lt;/span> &lt;span class="o">/&lt;/span> &lt;span class="n">math&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">exp&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">delta_v&lt;/span> &lt;span class="o">/&lt;/span> &lt;span class="n">Isp&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">fr&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">f&lt;/span> &lt;span class="o">/&lt;/span> &lt;span class="n">Isp&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">burn_time&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="n">m0&lt;/span> &lt;span class="o">-&lt;/span> &lt;span class="n">m1&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="o">/&lt;/span> &lt;span class="n">fr&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="n">node&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">control&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">add_node&lt;/span>&lt;span class="p">(&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">ut&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="o">+&lt;/span> &lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">orbit&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">time_to_apoapsis&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">prograde&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">delta_v&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;span class="lnt">16
+&lt;/span>&lt;span class="lnt">17
+&lt;/span>&lt;span class="lnt">18
+&lt;/span>&lt;span class="lnt">19
+&lt;/span>&lt;span class="lnt">20
+&lt;/span>&lt;span class="lnt">21
+&lt;/span>&lt;span class="lnt">22
+&lt;/span>&lt;span class="lnt">23
+&lt;/span>&lt;span class="lnt">24
+&lt;/span>&lt;span class="lnt">25
+&lt;/span>&lt;span class="lnt">26
+&lt;/span>&lt;span class="lnt">27
+&lt;/span>&lt;span class="lnt">28
+&lt;/span>&lt;span class="lnt">29
+&lt;/span>&lt;span class="lnt">30
+&lt;/span>&lt;span class="lnt">31
+&lt;/span>&lt;span class="lnt">32
+&lt;/span>&lt;span class="lnt">33
+&lt;/span>&lt;span class="lnt">34
+&lt;/span>&lt;span class="lnt">35
+&lt;/span>&lt;span class="lnt">36
+&lt;/span>&lt;span class="lnt">37
+&lt;/span>&lt;span class="lnt">38
+&lt;/span>&lt;span class="lnt">39
+&lt;/span>&lt;span class="lnt">40
+&lt;/span>&lt;span class="lnt">41
+&lt;/span>&lt;span class="lnt">42
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># https://krpc.github.io/krpc/tutorials/launch-into-orbit.html&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nb">print&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;Orientating ship for circularization burn&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">auto_pilot&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">disengage&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">auto_pilot&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">sas&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="kc">True&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">time&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">sleep&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mf">.1&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">auto_pilot&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">sas_mode&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">auto_pilot&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">sas_mode&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">maneuver&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">auto_pilot&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">wait&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nb">print&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;Waiting until circularization burn&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">burn_ut&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">ut&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="o">+&lt;/span> &lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">orbit&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">time_to_apoapsis&lt;/span> &lt;span class="o">-&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="n">burn_time&lt;/span>&lt;span class="o">/&lt;/span>&lt;span class="mf">2.&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">lead_time&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="mi">5&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">conn&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">space_center&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">warp_to&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">burn_ut&lt;/span> &lt;span class="o">-&lt;/span> &lt;span class="n">lead_time&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Execute burn&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nb">print&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;Ready to execute burn&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">time_to_apoapsis&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">conn&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">add_stream&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nb">getattr&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">orbit&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;time_to_apoapsis&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">while&lt;/span> &lt;span class="n">time_to_apoapsis&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="o">-&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="n">burn_time&lt;/span>&lt;span class="o">/&lt;/span>&lt;span class="mf">2.&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="o">&amp;gt;&lt;/span> &lt;span class="mi">0&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">pass&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">auto_pilot&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">wait&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nb">print&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;Executing burn&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">control&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">throttle&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="mf">1.0&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">time&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">sleep&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">burn_time&lt;/span> &lt;span class="o">-&lt;/span> &lt;span class="mf">0.05&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nb">print&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;Fine tuning&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">control&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">throttle&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="mf">0.05&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">remaining_burn&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">conn&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">add_stream&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">node&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">remaining_burn_vector&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">node&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">reference_frame&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">#vessel.auto_pilot.engage()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">auto_pilot&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">disengage&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">auto_pilot&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">sas&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="kc">True&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">time&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">sleep&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mf">.1&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">auto_pilot&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">sas_mode&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">auto_pilot&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">sas_mode&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">maneuver&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">control&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">throttle&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="mf">0.03&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">while&lt;/span> &lt;span class="n">node&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">remaining_delta_v&lt;/span> &lt;span class="o">&amp;gt;&lt;/span> &lt;span class="mi">4&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">pass&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">control&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">throttle&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="mf">0.0&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">node&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">remove&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">time&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">sleep&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">5&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nb">print&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;Launch complete&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;pre>&lt;code>Orientating ship for circularization burn
+Waiting until circularization burn
+Ready to execute burn
+Executing burn
+Fine tuning
+Launch complete
+&lt;/code>&lt;/pre>
+&lt;p>If all went well, you should be in a fairly accurate (and we can make it even better!) circularized orbit:&lt;/p>
+&lt;p>&lt;img src="https://tdj28.github.io/p/automating-the-circularization-of-apollo-in-kerbal-with-python-krpc-and-physics/assets/index-2e331.png"
+width="786"
+height="525"
+srcset="https://tdj28.github.io/p/automating-the-circularization-of-apollo-in-kerbal-with-python-krpc-and-physics/assets/index-2e331_hu2218312690310119773.png 480w, https://tdj28.github.io/p/automating-the-circularization-of-apollo-in-kerbal-with-python-krpc-and-physics/assets/index-2e331_hu13096795042021448279.png 1024w"
+loading="lazy"
+alt="an orbital view of the rocket showing a circularized orbit"
+class="gallery-image"
+data-flex-grow="149"
+data-flex-basis="359px"
+>&lt;/p>
+&lt;p>Now that we have circularized our orbit, we can do some house keeping and eject uneeded components from the rocket. In a future iteration, we will want to eject these as soon as we clear the atmosphere in order to reduce as much mass as soon as possible:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;span class="lnt">5
+&lt;/span>&lt;span class="lnt">6
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Drop stage 1&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">control&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">activate_next_stage&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Drop the escape rocket&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">control&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">activate_next_stage&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Drop the shields to lower weight&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">control&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">activate_next_stage&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>&lt;img src="https://tdj28.github.io/p/automating-the-circularization-of-apollo-in-kerbal-with-python-krpc-and-physics/assets/index-50aec.png"
+width="515"
+height="346"
+srcset="https://tdj28.github.io/p/automating-the-circularization-of-apollo-in-kerbal-with-python-krpc-and-physics/assets/index-50aec_hu18435129135423642554.png 480w, https://tdj28.github.io/p/automating-the-circularization-of-apollo-in-kerbal-with-python-krpc-and-physics/assets/index-50aec_hu8836306924092878690.png 1024w"
+loading="lazy"
+alt="showing the rocket against the milkyway with less stages"
+class="gallery-image"
+data-flex-grow="148"
+data-flex-basis="357px"
+>&lt;/p></description></item><item><title>TRAPPIST-1 is probably not alive</title><link>https://tdj28.github.io/p/trappist-1-is-probably-not-alive/</link><pubDate>Fri, 24 Feb 2017 19:21:05 -0700</pubDate><guid>https://tdj28.github.io/p/trappist-1-is-probably-not-alive/</guid><description>&lt;script>
+document.addEventListener("DOMContentLoaded", function() {
+renderMathInElement(document.body, {
+delimiters: [
+{left: "$$", right: "$$", display: true},
+{left: "$", right: "$", display: false}
+]
+});
+});
+&lt;/script>
+&lt;aside aria-label="note" class="note">
+&lt;div>
+&lt;pre>&lt;code>UPDATE July 23 2022:
+&lt;/code>&lt;/pre>
+&lt;p>The JWST has taken spectrographic readings of the TRAPPIST system. We will update this blog entry with any key findings when they are released.
+It will be of great interest if JWST detects atmosphere and water on any of the TRAPPIST planets in the habitable zone.&lt;/p>
+&lt;/div>
+&lt;/aside>
+&lt;aside aria-label="note" class="note">
+&lt;div>
+&lt;pre>&lt;code>UPDATE Aug 10 2021:
+&lt;/code>&lt;/pre>
+&lt;p>An &lt;a class="link" href="https://academic.oup.com/mnras/article-abstract/507/2/1723/6339287?redirectedFrom=fulltext&amp;amp;login=false" target="_blank" rel="noopener"
+>article&lt;/a> (&lt;a class="link" href="https://arxiv.org/abs/2108.01917" target="_blank" rel="noopener"
+>preprint&lt;/a>, &lt;a class="link" href="https://ui.adsabs.harvard.edu/abs/2021MNRAS.507.1723I/abstract" target="_blank" rel="noopener"
+>NASA ADS&lt;/a>) in the &lt;em>Monthly Notices of the Royal Astronomical Society&lt;/em> suggests that ultra-cool dwarf stars are &lt;a class="link" href="https://skyandtelescope.org/astronomy-news/red-dwarfs-arent-so-bad-for-planets-after-all/" target="_blank" rel="noopener"
+>potentially not as deadly as first thought&lt;/a>. The article suggests that the flaring tends to happen at higher latitudes on the star, which would result in such flares to tend to be directed away from the planets which are located closer to the equatorial plane of the star. Should this prove to be accurate, then that would soften the skepticism we displayed in the earlier version of this blog in regards to stars of this type hosting life, although the other causes of skepticism still remain high.&lt;/p>
+&lt;/div>
+&lt;/aside>
+&lt;h2 id="quick-overview">Quick overview
+&lt;/h2>&lt;ul>
+&lt;li>It was recently announced that a nearby star, TRAPPIST-1,
+has been found to have additional planets (some were discovered prior to this study)
+which exist in a potentially
+life-hosting region around the star.&lt;/li>
+&lt;li>[OLD TEXT] Astronomically speaking, TRAPPIST-1 is pretty close to
+us and thus if it does host life then it will be a promising
+candidate for spectrographic evidence. [SEE UPDATE ABOVE]&lt;/li>
+&lt;li>[OLD TEXT] However, the nature of the star and the configuration of
+the planets means that there are some good reasons to be
+skeptical that any of those planets do host life. [SEE UPDATE ABOVE]&lt;/li>
+&lt;li>Also, it is practically impossible with our current
+technology to visit that system with unmanned probes,
+let alone (hu)maned missions.&lt;/li>
+&lt;li>The distances in space are so vast and the restrictions
+that the laws of Physics place on space travel are so stringent
+that we would probably have to completely exploit our entire
+planet&amp;rsquo;s resources to even have a chance to visit that solar
+system within 10,000 years.&lt;/li>
+&lt;li>We are probably not alone in the universe, but we are
+also probably very, very rare, and we likely won&amp;rsquo;t meet
+any alien intelligence before we go extinct.&lt;/li>
+&lt;/ul>
+&lt;h2 id="deeper-dive">Deeper Dive
+&lt;/h2>&lt;p>An &lt;a class="link" href="http://nature.com/articles/doi:10.1038/nature21360" target="_blank" rel="noopener"
+>article published in the science journale &lt;em>Nature&lt;/em>&lt;/a>
+(Gillon et al., &lt;em>Nature&lt;/em>, &lt;strong>542&lt;/strong>, February 23, 2017) made many mainstream media
+headlines by announcing the discovery of new terestrial planets around a nearby
+star. &lt;strong>CNN&lt;/strong> was pretty tame by &lt;a class="link" href="http://www.cnn.com/2017/02/22/world/new-exoplanets-discovery-nasa/" target="_blank" rel="noopener"
+>announcing&lt;/a> that &lt;em>Astronomers discover 7 Earth-sized planets orbiting nearby star&lt;/em> in their headline. The &lt;strong>New York Times&lt;/strong> was
+equally tame in &lt;a class="link" href="https://www.nytimes.com/2017/02/22/science/trappist-1-exoplanets-nasa.html?_r=0" target="_blank" rel="noopener"
+>announcing&lt;/a> that &lt;em>7 Earth-Size Planets Orbit Dwarf Star, NASA and European Astronomers Say&lt;/em>. &lt;strong>NBC&lt;/strong> went a little
+louder with the &lt;a class="link" href="http://www.nbcnews.com/mach/space/living-trappist-1-planets-would-be-very-strange-n725206" target="_blank" rel="noopener"
+>headline&lt;/a>
+&lt;em>Living on the TRAPPIST-1 Planets Would Be Very Strange&lt;/em>, which, let&amp;rsquo;s be clear, suggest to the average reader
+that those planets are in fact habitable, which is not confirmed yet (more on that soon).
+&lt;strong>CNET&lt;/strong> was &lt;a class="link" href="https://www.cnet.com/pictures/trappist-1-star-system-could-host-life-exoplanets-earth-like/" target="_blank" rel="noopener"
+>bolder&lt;/a>
+with a headline &lt;em>&amp;lsquo;Incredible&amp;rsquo; star system could host life&lt;/em>, but the &amp;ldquo;could&amp;rdquo; was a good word to use though
+it spoke nothing to the actual probability. I &lt;em>could&lt;/em> win the lottery and get struck down by lightening and
+then a meteor could hit the ambulance carrying me to the hospital, but I&amp;rsquo;m not going to bet on it.
+The UK &lt;strong>Telegraph&lt;/strong> &lt;a class="link" href="http://www.telegraph.co.uk/science/2017/02/22/nasa-announcement-live/" target="_blank" rel="noopener"
+>pushed it&lt;/a> a bit
+further with the headline &lt;em>Nasa discovers new solar system TRAPPIST-1 - where life may have evolved on three planets&lt;/em>.
+The &lt;strong>Guardian&lt;/strong> &lt;a class="link" href="https://www.theguardian.com/science/2017/feb/24/lab-notes-is-there-life-on-exoplanets-orbiting-trappist-1" target="_blank" rel="noopener"
+>asked&lt;/a>
+&lt;em>is there life on exoplanets orbiting Trappist-1?&lt;/em>&lt;/p>
+&lt;p>Even &lt;strong>Fox News&lt;/strong> got in on the fun by &lt;a class="link" href="http://www.foxnews.com/science/2017/02/23/keys-to-life-scientists-explain-how-newly-discovered-exoplanets-could-be-habitable.html" target="_blank" rel="noopener"
+>asking a science reporter&lt;/a> whether
+this was &amp;ldquo;just a big deal or a way to get the general public interseted in space exploration to insure that it&amp;rsquo;s
+properly funded&amp;hellip;?&amp;rdquo; in a video with the title &amp;ldquo;Could New Earth-like Planets Be Ripe for Colonization?&amp;rdquo;&lt;/p>
+&lt;p>&lt;img src="https://tdj28.github.io/p/trappist-1-is-probably-not-alive/assets/trappist1isprobablynotalive-ad220.png"
+width="393"
+height="333"
+srcset="https://tdj28.github.io/p/trappist-1-is-probably-not-alive/assets/trappist1isprobablynotalive-ad220_hu5977021384684107895.png 480w, https://tdj28.github.io/p/trappist-1-is-probably-not-alive/assets/trappist1isprobablynotalive-ad220_hu15954942922208881902.png 1024w"
+loading="lazy"
+alt="FoxNews"
+class="gallery-image"
+data-flex-grow="118"
+data-flex-basis="283px"
+>&lt;/p>
+&lt;p>For the record, I don&amp;rsquo;t have an issue with those headlines, as if that would matter anyway. I&amp;rsquo;m even
+a bit fond of that &lt;a class="link" href="http://io9.gizmodo.com/nasa-is-turning-trappist-1-into-science-nerd-fanfic-1792713502" target="_blank" rel="noopener"
+>creative website&lt;/a>
+that some planetary scientist have put up to host information and fan fiction related to TRAPPIST-1.
+The more public interest they can drum up for their work, the more grant money that will
+flow towards planetary and exoplanetary science.&lt;/p>
+&lt;p>However, let&amp;rsquo;s bring this discussion back down to Earth for a moment.&lt;/p>
+&lt;h3 id="some-background-on-trappist-1">Some background on TRAPPIST-1
+&lt;/h3>&lt;p>&lt;a class="link" href="https://en.wikipedia.org/wiki/TRAPPIST-1" target="_blank" rel="noopener"
+>TRAPPIST-1&lt;/a> is a very small and relatively cold
+star that is about 40 light-years away from our solar system. TRAPPIST-1&amp;rsquo;s radial velocity
+is 56.3 km/s towards us, which isn&amp;rsquo;t very fast. For example, the Juno spacecraft&amp;rsquo;s maximum
+speed was about 73.6 km/s. The fastest speed of a (hu)manned spacecraft was achieved by
+Apollo 10 at about 11.08 km/s.&lt;/p>
+&lt;p>TRAPPIST-1 is so dim you can&amp;rsquo;t see it without a strong telescope.&lt;/p>
+&lt;p>Two things are interesting about our findings on exoplanets: it is pretty common for a star to have planets (just a few decades ago this wasn&amp;rsquo;t an accepted reality); and our solar system seems to be a bit of an outlier in terms of the configuration of planets around the star based on what we&amp;rsquo;ve seen so far. A lot of these systems have Jupiter size or larger planets in very close orbit around the star; in the case of TRAPPIST-1, the star is much much weaker than the sun and all the planets we&amp;rsquo;ve found are in a very close tight orbit. This later fact may be due to selection bias, i.e. it is easier to find planets around a star when the planets are large and very close because the motion of the star is more strongly affected (for Doppler-effect discovered planets and also the luminosity detection method) and also when they are closer to the star and the plane of orbit is nearly head on relative to Earth. Also, of course, an Earth sized planet is going to cause a bigger
+dip in the intensity of light of a dwarf star when passing in between our telescopes and that star than would a similar size planet,
+say ours, have on a larger star like our sun (which itself isn&amp;rsquo;t all that big compared to some of the giant stars that can be
+found in the universe, but is substantially bigger than TRAPPIST-1). So
+right now the limitations of our detection technology is creating a statistical bias towards systems for which it is better
+able to detect exoplanets. As the next generation observation equipment is developed, we may start finding more solar systems
+which resemble ours.&lt;/p>
+&lt;h3 id="why-we-are-excited-about-this-discovery">Why we are excited about this discovery
+&lt;/h3>&lt;ul>
+&lt;li>Three of the planets are believed to be capable of hosting liquid water oceans.
+Having liquid water oceans vastly increases the chances a planet could host
+life.&lt;/li>
+&lt;li>Ultracool stars, which TRAPPIST-1 is classified as, are &lt;a class="link" href="http://www.trappist.one/#about" target="_blank" rel="noopener"
+>the most common type&lt;/a> of
+stars in our galaxy. The fact that TRAPPIST-1 has so many planets and so many planets that
+are within the potentially habitable zone bodes well for our chances of finding life-hosting
+exoplanets if the negatives in the next section aren&amp;rsquo;t enough to stop life from evolving.&lt;/li>
+&lt;li>Because the stars are so small, it is easier to see the dip in light which an Earth-sized
+planet would cause if it passes between us and TRAPPIST-1. TRAPPIST-1&amp;rsquo;s solar system&amp;rsquo;s orbital
+plane happens to be position just right for us to see these planets crossing the star; random
+chance says that only a ver small percentage of solar systems would yield this lucky result.
+However, because ultracool stars are so common, the odds are in our favor that we will continue
+to discover similar systems.&lt;/li>
+&lt;/ul>
+&lt;h3 id="why-we-shouldnt-be-too-excited-about-this-discovery">Why we shouldn&amp;rsquo;t be too excited about this discovery
+&lt;/h3>&lt;ul>
+&lt;li>
+&lt;p>The planets are probably tidally locked or near tidally locked and suffer run-away green house effects. One side of
+planet always faces the sun, the other always faces dark space. The resulting temperature differential would result
+in massive global winds if the planets retain their atmospheres. There is still a lot of &lt;a class="link" href="https://arxiv.org/abs/1602.05176" target="_blank" rel="noopener"
+>debate&lt;/a>
+about where the habitable zone is for tidally locked systems, and the predictions that three of these planets
+exist in the &amp;ldquo;Goldilocks zone&amp;rdquo; are not settled science.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>As the director of the Carl Sagan Institute,
+Lisa Kaltenegger, points out, these planets are incredibly close to their star
+and their star could be emitting intense levels of ultraviolet light. UV radiation
+is dangerous for life as we know it, so in order to host light the planets would
+need some very serious ozone protection. Alternatively, assuming they had oceans,
+and that their oceans didn&amp;rsquo;t boil away or freeze over, life would probably be limited
+to deep oceans.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Ultracool dwarfs are often violent stars with massive flares. However, TRAPPIST-1 is
+relatively peaceful, according to some of the reports. [UPDATE AUG 10 2021]: See also the above update which suggests that these stars may not be as deadly via flares as originally thought.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>They may possibly have lost their atmospheres due to being so close to the star.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>It is only about 500 million years old, so there hasn&amp;rsquo;t been much time for
+life to evolve even if the above issues didn&amp;rsquo;t prevent said evolution. These
+stars, unlike ours, can hypothetically last for &lt;strong>trillions&lt;/strong> of years since
+they &lt;a class="link" href="http://onlinelibrary.wiley.com/doi/10.1002/asna.200510440/abstract" target="_blank" rel="noopener"
+>burn their hydrogen fuel much more slowly&lt;/a>
+than larger stars:&lt;/p>
+&lt;/li>
+&lt;/ul>
+&lt;p>&lt;img src="https://tdj28.github.io/p/trappist-1-is-probably-not-alive/assets/trappist1isprobablynotalive-c401a.png"
+width="789"
+height="551"
+srcset="https://tdj28.github.io/p/trappist-1-is-probably-not-alive/assets/trappist1isprobablynotalive-c401a_hu15081109623916171328.png 480w, https://tdj28.github.io/p/trappist-1-is-probably-not-alive/assets/trappist1isprobablynotalive-c401a_hu17038352442560896385.png 1024w"
+loading="lazy"
+alt="trillions"
+class="gallery-image"
+data-flex-grow="143"
+data-flex-basis="343px"
+>&lt;/p>
+&lt;p>Even if some of oceans remain and are frozen over, that doesn&amp;rsquo;t rule out life.
+Some of the moons in our solar system have frozen oceans of water where there is a suspected liquid layer underneath that could possible host life (e.g. Europa) which is why NASA has an interest in looking for potential life on Europa. So the conditions of the TRAPPIST-1 system may support some form of life but like with Europa, the ability for complex life to develop is highly limited due to lack of resources. Also, life can be fragile, and Earth went through many periods of mass extinctions; if any of the planets around TRAPPIST-1 have life, they are probably relegated to small regions in the twilight zones (that is, if one side always faces the star and the other always faces empty space, the part of the planet between these two zones would be in permanent twilight and have the mildest climates if the planets still have their atmospheres) making life on those planets much more vulnerable to total extinction, a fate Earth avoided in part due to being almost entirely habitable and thus having a more diverse biosphere.&lt;/p>
+&lt;h2 id="sobering-conclusions">Sobering Conclusions
+&lt;/h2>&lt;p>Forty lightyears is a long way away. Apollo 10&amp;rsquo;s max speed was around 11082.5 m/s which is the fastest manned craft speed we&amp;rsquo;ve ever obtained. That&amp;rsquo;s slower than how fast TRAPPIST-1 is moving toward us. 40 light years is 3.784e+17 meters away. If Apollo 10 went directly towards TRAPPIST-1 at its maximum obtained speed, it would close the distance at a rate of about 67082.5 m/s (the sum of its speed relative to Earth and the speed of TRAPPIST-1 relative to Earth using Galilean Relativity, these speeds are too slow to justify using Einstein&amp;rsquo;s Relativity). It would take Apollo 10 approximately 5.6408154e+12 seconds to make it to TRAPPIST-1. That&amp;rsquo;s nearly 178,846 years. Rocket technology hasn&amp;rsquo;t changed radically since then. And, of course, the astronauts wouldn&amp;rsquo;t live long enough to get even
+a tiny fraction of the way there.&lt;/p>
+&lt;p>Even if the entire world turned all of their defense spending towards producing a &lt;a class="link" href="https://en.wikipedia.org/wiki/Generation_ship" target="_blank" rel="noopener"
+>Generation ship&lt;/a> to reach TRAPPIST-1 and impoverished the planet&amp;rsquo;s resources to supply fuel and food supplies for said ship, we are still talking many tens of thousands of years at best, ignoring all threats to human life such as radiation, collision with stray objects, etc. One could easily imagine that within a few generations, the community on the generational
+ship would lose faith in their great-grandparent&amp;rsquo;s mission and turn the ship around, assuming they had enough fuel to do so.
+It is likely they would, as they would have to have some breaking capacity once they reach TRAPPIST-1, and then enough fuel
+to escape TRAPPIST-1&amp;rsquo;s gravity well. All to say that this is never going to happen.&lt;/p>
+&lt;p>Science fiction has sparked our imagination of traveling to the stars, but the cold reality is that while there is probably a lot of life off Earth in this Universe, everybody is trapped in their own solar systems by relativity and the vast distances between stars. Also, Earth is about 4.5 billion years old and we have about another few billion years until our sun eats its inner planets; who knows what can happen in those billions of years. Keep in mind that human-level intelligence is probably very rare in any case. Some scientist &lt;a class="link" href="http://www.npr.org/sections/krulwich/2012/10/22/163397584/how-human-beings-almost-vanished-from-earth-in-70-000-b-c" target="_blank" rel="noopener"
+>have proposed based on genetic evidence&lt;/a>
+that at one point about 75,000 years ago the human species was once reduced to 3,000 - 10,000 individuals due to climate catastrophes. If this is true (and not all scientist think it is), then we were once very close to extinction. Earth was very close to losing its human population, becoming a wild planet whose greatest intelligence might be the non-human apes that survive today. Not only must a planet have the right conditions for life, it must also have the right conditions for complex life, and even then, it&amp;rsquo;s going to take some luck to get to a human-like intelligence.&lt;/p>
+&lt;p>So we (complex intelligent life) are probably not alone but we are also probably very, very rare, and we likely won&amp;rsquo;t meet any alien intelligence before we go extinct.&lt;/p>
+&lt;h2 id="coda">Coda
+&lt;/h2>&lt;p>In regards to the discussion above on generation ships, there is something related to that known as
+the &lt;a class="link" href="https://ui.adsabs.harvard.edu/abs/2006JBIS...59..239K/abstract" target="_blank" rel="noopener"
+>Wait Calculation&lt;/a> (A. Kennedy, &lt;em>Interstellar Travel: The Wait Calculation and the Incentive Trap of Progress&lt;/em>, JBIS &lt;strong>59&lt;/strong>, July 2006) which is relevant beyond the concept of a generation ship.&lt;/p>
+&lt;p>From the abstract:&lt;/p>
+&lt;blockquote>
+&lt;p>This paper describes an incentive trap of growth that shows that civilisations may delay interstellar exploration as long as voyagers have the reasonable expectation that whenever they set out growth will continue to progress and find quicker means of travel, overtaking them to reach and colonise the destination before they do. This paper analyses the voyagers&amp;rsquo; wait calculation, using the example of a trip to Barnard&amp;rsquo;s Star, and finds a surprising minimum to time to destination at a given rate of growth that affects the expansion of all civilisations. Using simple equations of growth, it can be shown that there is a time where the negative incentive to travel turns positive and where departures will beat departures made at all other times. Waiting for fear future technology will make a journey redundant is irrational since it can be shown that if growth rates alter then leaving earlier may be a better option. It considers that while growth is resilient and may follow surprising avenues, a future discovery producing a quantum leap in travel technology that justifies waiting is unlikely.&lt;/p>
+&lt;/blockquote>
+&lt;p>Kennedy derives a &lt;strong>Wait Equation&lt;/strong>: &amp;ldquo;The wait equation describes &amp;hellip; the
+point at which the negative incentive to leave changes to a positive one; where the incentive to set out on the interstellar
+journey is the strongest.&amp;rdquo;&lt;/p>
+&lt;p>The equation assumes that the growth rate of the speed of the potential ship per year is tied to the
+general global GDP growth rate:&lt;/p>
+&lt;p>$$ v(t) = v_0 (1 + r)^t$$&lt;/p>
+&lt;p>where $v$ is the velocity $t$ years after the velocity is $v_0$ and $r$ is the average growth rate year over year.
+Since velocity is inversely proportional to the time it would take to reach the star, we can rewrite this as&lt;/p>
+&lt;p>$$ \frac{T_0}{T} = (1+r)^t $$&lt;/p>
+&lt;p>where $T$ is the time it would take if we waited $t$ years for technology to evolve, and $T_0$ is the time
+to take if we were to launch with today&amp;rsquo;s current technology. The purpose of the &lt;strong>Wait Equation&lt;/strong> is to find the
+sweet spot for launching such that to wait any longer would not return any advantage.&lt;/p>
+&lt;p>We seek, then, the condition for which:&lt;/p>
+&lt;p>$$ t + \frac{T_0}{(1+r)^t} $$&lt;/p>
+&lt;p>reaches a minimum. Using our previous rough estimate of 178,846 years for
+Apollo 10 to reach TRAPPIST-1 and a growth rate of 1%,
+we see that this minimum would happen about
+seven centuries from now.&lt;/p>
+&lt;p>&lt;img src="https://tdj28.github.io/p/trappist-1-is-probably-not-alive/assets/trappist1isprobablynotalive-520e1.png"
+width="436"
+height="408"
+srcset="https://tdj28.github.io/p/trappist-1-is-probably-not-alive/assets/trappist1isprobablynotalive-520e1_hu6686539091510510642.png 480w, https://tdj28.github.io/p/trappist-1-is-probably-not-alive/assets/trappist1isprobablynotalive-520e1_hu2867360196520095221.png 1024w"
+loading="lazy"
+alt="WaitEquation"
+class="gallery-image"
+data-flex-grow="106"
+data-flex-basis="256px"
+>&lt;/p>
+&lt;p>The implication, if you accept the premises of this equation, is that
+to ensure that the generation ship we launch won&amp;rsquo;t be beat to the destination
+by a faster model, we should wait about 700 years to launch.&lt;/p>
+&lt;p>A word of warning, of course. This model is entirely unrealistic. It
+would predict that we exceed the speed of light with our technology
+in a little over 1000 years:&lt;/p>
+&lt;p>&lt;img src="https://tdj28.github.io/p/trappist-1-is-probably-not-alive/assets/trappist1isprobablynotalive-608bc.png"
+width="406"
+height="409"
+srcset="https://tdj28.github.io/p/trappist-1-is-probably-not-alive/assets/trappist1isprobablynotalive-608bc_hu7337707784487014808.png 480w, https://tdj28.github.io/p/trappist-1-is-probably-not-alive/assets/trappist1isprobablynotalive-608bc_hu10569316293835502600.png 1024w"
+loading="lazy"
+alt="noway"
+class="gallery-image"
+data-flex-grow="99"
+data-flex-basis="238px"
+>&lt;/p>
+&lt;p>So let&amp;rsquo;s in no way see this as a valid physical prediction. Instead, let&amp;rsquo;s see
+it as sort of a conceptual starting point for a discussion about &amp;ldquo;the incentive
+trap of progress.&amp;rdquo; I&amp;rsquo;ll revisit the &lt;em>Wait Equation&lt;/em> again in some future
+blog post (probably) because it has applications elsewhere. For example,
+it might help us understand why it may be better to avoid getting a first
+or even second or third generation product. If you buy a first generation
+product and you don&amp;rsquo;t have a budget such that you can buy an upgraded product
+for many years ahead, then you will suffer a poorer quality product than you
+might if you waited a year or two for the next iterations of that product
+to improve. However, if you wait too long, you also harm yourself by denying
+yourself access to that product, and waiting too long means that the net
+harm to yourself could exceed the harm of buying too early.&lt;/p>
+&lt;p>Indeed, that&amp;rsquo;s a potentially awesome post so let&amp;rsquo;s plan to discuss it again soon.&lt;/p></description></item></channel></rss>

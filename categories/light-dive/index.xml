@@ -1,0 +1,631 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Light-Dive on</title><link>https://tdj28.github.io/categories/light-dive/</link><description>Recent content in Light-Dive on</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sun, 26 Aug 2018 19:21:05 -0700</lastBuildDate><atom:link href="https://tdj28.github.io/categories/light-dive/index.xml" rel="self" type="application/rss+xml"/><item><title>Headless Python Selenium With Behave</title><link>https://tdj28.github.io/p/headless-python-selenium-with-behave/</link><pubDate>Sun, 26 Aug 2018 19:21:05 -0700</pubDate><guid>https://tdj28.github.io/p/headless-python-selenium-with-behave/</guid><description>&lt;p>Testing software can often be seen as the least enjoyable part of the
+&lt;a class="link" href="https://en.wikipedia.org/wiki/Systems_development_life_cycle" target="_blank" rel="noopener"
+>systems development life cycle&lt;/a>.
+It is easy to see why. Developing the actual application that does the magic
+that the end user finds value in is indeed a very exciting core to the process.
+And yet, what you produce could be worthless if it doesn&amp;rsquo;t work for the user.&lt;/p>
+&lt;p>So let&amp;rsquo;s say you are working on an individual pet project. The fun part is
+coding it up and getting it to do something. Here, I&amp;rsquo;m going to use a simple
+&lt;em>Flask&lt;/em> app that serves up some Wikipedia page count stats as an example.
+As a developer adds layers and new features and new bells and whistles and
+pipes and extension cords to their project, things which they
+haven&amp;rsquo;t developed in months or years can break, and if they don&amp;rsquo;t have a good testing
+suite in place, they won&amp;rsquo;t catch it and will serve out a degraded experience.
+That&amp;rsquo;s a dis-service to their users, but even to themselves, whose hard work
+has gone to waste because that piece of the project, which they might have
+spent many hours working on, might as well not even exist if it doesn&amp;rsquo;t work.
+Worse yet, if they break their app entirely, it could take hours and hours
+of searching for a bug.&lt;/p>
+&lt;p>If instead there is a systematic testing suite in place,
+each incremental change can be subjected to a battery of tests that help ensure
+that it is safe to continue to the next incremental change. This &lt;em>should not&lt;/em> be
+the developer clicking through their app and making sure everything looks good.
+There are many awesome tools in place that allow for quick automated testing.
+Here, we provide a walk through to jump start a web developer on using Python
+and the selenium and behave libraries to provide a full browser test of their site.&lt;/p>
+&lt;h2 id="selenium">Selenium
+&lt;/h2>&lt;p>Selenium is a Python library that automates testing the final product of
+a webpage. Selenium integrates with various browsers and replicates
+the behavior that you expect from your users, all while measuring the
+response to that behavior against your expectations for how the site, when
+in its optimal state, should respond.
+It is as easy to install as&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">pip install selenium nose behave
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>Let&amp;rsquo;s start with a very simple example. Suppose you have webpage that
+simply serves this up:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;span class="lnt">5
+&lt;/span>&lt;span class="lnt">6
+&lt;/span>&lt;span class="lnt">7
+&lt;/span>&lt;span class="lnt">8
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-html" data-lang="html">&lt;span class="line">&lt;span class="cl">&lt;span class="p">&amp;lt;&lt;/span>&lt;span class="nt">html&lt;/span>&lt;span class="p">&amp;gt;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">&amp;lt;&lt;/span>&lt;span class="nt">head&lt;/span>&lt;span class="p">&amp;gt;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">&amp;lt;&lt;/span>&lt;span class="nt">title&lt;/span>&lt;span class="p">&amp;gt;&lt;/span>WikiViz&lt;span class="p">&amp;lt;/&lt;/span>&lt;span class="nt">title&lt;/span>&lt;span class="p">&amp;gt;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">&amp;lt;/&lt;/span>&lt;span class="nt">head&lt;/span>&lt;span class="p">&amp;gt;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">&amp;lt;&lt;/span>&lt;span class="nt">body&lt;/span>&lt;span class="p">&amp;gt;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">&amp;lt;&lt;/span>&lt;span class="nt">h1&lt;/span> &lt;span class="na">class&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s">&amp;#34;example&amp;#34;&lt;/span>&lt;span class="p">&amp;gt;&lt;/span>Hello World!&lt;span class="p">&amp;lt;/&lt;/span>&lt;span class="nt">h1&lt;/span>&lt;span class="p">&amp;gt;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">&amp;lt;/&lt;/span>&lt;span class="nt">body&lt;/span>&lt;span class="p">&amp;gt;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">&amp;lt;/&lt;/span>&lt;span class="nt">html&lt;/span>&lt;span class="p">&amp;gt;&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>Even if you didn&amp;rsquo;t want to get fancy and set up a nice file structure and
+orchestrate your testing with tools such as &lt;code>behave&lt;/code> and &lt;code>nose&lt;/code>, you
+could simply create a very straight-forward python script that runs
+the selenium testing you need to ensure that your page is serving
+the expected content.&lt;/p>
+&lt;p>If you are running these locally on your laptop, the following
+step isn&amp;rsquo;t necessary, you will just need to make sure you have
+Firefox installed. Selenium works with other browsers, but
+to keep this simple at first, we will focus on Firefox.&lt;/p>
+&lt;h3 id="headless-on-ubuntu-skip-this-if-using-a-mac">Headless on Ubuntu (skip this if using a Mac)
+&lt;/h3>&lt;p>Skip this section if you don&amp;rsquo;t plan to run this on a remote
+linux-based server. In this example, I&amp;rsquo;m using my Cloud 9 IDE
+account which serves up containers with Ubuntu as the OS.&lt;/p>
+&lt;p>First we need to isntall the &lt;a class="link" href="https://en.wikipedia.org/wiki/Xvfb" target="_blank" rel="noopener"
+>Xvfb&lt;/a> package:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">sudo apt-get install firefox xvfb
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>and the PyVirtualDisplay python library:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">pip install selenium nose behave PyVirtualDisplay
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>Finally, you&amp;rsquo;ll need the &lt;a class="link" href="https://github.com/mozilla/geckodriver/releases" target="_blank" rel="noopener"
+>geckodriver&lt;/a>
+(they don&amp;rsquo;t include md5sums or rsa hashes to confirm authenticity, but use github
+to host and release which comes with a great deal of trust):&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">wget https://github.com/mozilla/geckodriver/releases/download/v0.21.0/geckodriver-v0.21.0-linux64.tar.gz
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">tar zxvf geckodriver-v0.21.0-linux64.tar.gz
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">chmod a+x geckodriver
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">sudo mv geckodriver /usr/local/bin/
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;h3 id="our-first-selenium-assertion">Our first selenium assertion
+&lt;/h3>&lt;p>Now we are ready for our first test. This test will
+do two things. First, it will cause selenium to try
+to access the webpage. If it can&amp;rsquo;t do so, it will fail.
+This means that a selenium tests automatically tells
+you whether or not your page is up and running right
+out of the box. Secondly, the test will assert that
+the very simple webpage example shown above is setting
+the title to &amp;lsquo;WikiViz&amp;rsquo; as it should be.&lt;/p>
+&lt;p>If you are using the headless on your remote server,
+your code will look like this:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="ch">#!/usr/bin/env python&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">from&lt;/span> &lt;span class="nn">pyvirtualdisplay&lt;/span> &lt;span class="kn">import&lt;/span> &lt;span class="n">Display&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">from&lt;/span> &lt;span class="nn">selenium&lt;/span> &lt;span class="kn">import&lt;/span> &lt;span class="n">webdriver&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">display&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">Display&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">visible&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">size&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">1000&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">1000&lt;/span>&lt;span class="p">))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">display&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">start&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">driver&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">webdriver&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">Firefox&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">driver&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">get&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;http://localhost:8080/&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">assert&lt;/span> &lt;span class="n">driver&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">title&lt;/span> &lt;span class="o">==&lt;/span> &lt;span class="s1">&amp;#39;WikiViz&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">driver&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">quit&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">display&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">stop&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>If you are running this in a local environment, such as on
+a Mac, and you like to watch selenium open the browser and
+walk through the tests, then your code would look like this:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;span class="lnt">5
+&lt;/span>&lt;span class="lnt">6
+&lt;/span>&lt;span class="lnt">7
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="kn">from&lt;/span> &lt;span class="nn">selenium&lt;/span> &lt;span class="kn">import&lt;/span> &lt;span class="n">webdriver&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">base_url&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="s2">&amp;#34;http://localhost:8080&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">driver&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">webdriver&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">Firefox&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">driver&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">get&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">base_url&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">assert&lt;/span> &lt;span class="n">driver&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">title&lt;/span> &lt;span class="o">==&lt;/span> &lt;span class="s2">&amp;#34;WikiViz&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>Yes, it is that easy! OK, well, at least for the title. As
+your page gets more complicated, so will your testing, but
+overall the spirit of simplicity in the selenium testing scheme
+carries over. It&amp;rsquo;s the complexities of html/javascript that
+you will eventually need to worry about. But we will keep things
+simple here.&lt;/p>
+&lt;h3 id="expanding-the-tests">Expanding the tests
+&lt;/h3>&lt;p>In order to make our example just a little more
+interesting, and give selenium something to &lt;em>do&lt;/em> rather than
+just &lt;em>observe&lt;/em>, let&amp;rsquo;s add a button to our simple home page
+that takes us to another page. Add the following just after
+the h1 entry:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-fallback" data-lang="fallback">&lt;span class="line">&lt;span class="cl">&amp;lt;form&amp;gt;
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &amp;lt;input type=&amp;#34;button&amp;#34; value=&amp;#34;results&amp;#34; onclick=&amp;#34;window.location.href=&amp;#39;/results&amp;#39;&amp;#34; /&amp;gt;
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&amp;lt;/form&amp;gt;
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>In this next section, I&amp;rsquo;m going to make the tests a little more
+complicated in structure, but for a good payoff. If you like to
+keep your tests in a single script as above, you can simply expand
+on that script. Here, I will show a simple example using &lt;code>nose&lt;/code>
+and &lt;code>behave&lt;/code> libraries. This example was inspired by a slightly more
+complicated (and well done) example (which doesn&amp;rsquo;t have the headless feature)
+&lt;a class="link" href="https://the-creative-tester.github.io/Python-Web-Browser-Automation-Behave/" target="_blank" rel="noopener"
+>here&lt;/a>,
+but meant to be easier to dive into for those new to testing with selenium.&lt;/p>
+&lt;p>Create a file structure that looks as follows:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">&lt;span class="o">(&lt;/span>env&lt;span class="o">)&lt;/span> tdj28:~/workspace/selenium_tests &lt;span class="o">(&lt;/span>master&lt;span class="o">)&lt;/span> $ tree .
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">.
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">├── features
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">│   ├── __init__.py
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">│   ├── pages
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">│   │   └── __init__.py
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">│   └── steps
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">│   └── __init__.py
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">└── simple_examples
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> └── xvfb_example.py
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>here&amp;rsquo;s some bash to make that happen:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;span class="lnt">5
+&lt;/span>&lt;span class="lnt">6
+&lt;/span>&lt;span class="lnt">7
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">mkdir -p selenium_tests/features
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">mkdir selenium_tests/pages
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">mkdir selenium_tests/steps
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">mkdir selenium_tests/simple_examples
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">touch selenium_tests/features/__init__.py
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">touch selenium_tests/pages/__init__.py
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">touch selenium_tests/steps/__init__.py
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>The &lt;code>simple_examples&lt;/code> directory is where I put in some simple scripts
+for testing a few features (or writing this blog post), but you definitely
+don&amp;rsquo;t want something that sloppy in a production version of your code.&lt;/p>
+&lt;p>(Google &lt;code>init python files&lt;/code> if you don&amp;rsquo;t know what those &lt;code>__init__.py&lt;/code> files
+are for.)&lt;/p>
+&lt;h3 id="step-one-define-the-behavior">Step One: Define the Behavior
+&lt;/h3>&lt;p>BDD development would have us define behaviors we expect of the site before
+we even begin to develop site. That&amp;rsquo;s a good place to start for selenium testing
+as well, where if these definitions are pre-existing, we can use them as our starting
+point. If not, we can easily create our own.&lt;/p>
+&lt;p>In the &lt;code>features&lt;/code> directory, create a file called &lt;code>clickbutton.feature&lt;/code> with
+the following content:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;span class="lnt">5
+&lt;/span>&lt;span class="lnt">6
+&lt;/span>&lt;span class="lnt">7
+&lt;/span>&lt;span class="lnt">8
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-fallback" data-lang="fallback">&lt;span class="line">&lt;span class="cl">Feature: ClickButton
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> Scenario: Click Away From Homepage
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> Given I navigate to the Home page
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> And I see that the pagename is WikiViz
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> And I see the header &amp;#34;Hello World!&amp;#34;
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> When I click the button
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> Then I see that the pagename is no longer WikiViz
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>This is the beauty of the &lt;code>behave&lt;/code> library and behavior based testing in general.
+We can use everyday language to describe our user&amp;rsquo;s experience, and then translate
+that in to tests as we will see shortly. This enables non-technical folks to
+contribute tests.&lt;/p>
+&lt;p>Note that in the above tests, the last line entry is a bit of a cheat on my part.
+The test really should, in that line, confirm in some way that it made it to the
+results page. So don&amp;rsquo;t do what I did there! If for example you click on the button
+and it takes you to a 404 error page, your test will still pass. I take that shortcut
+here only to keep this jump start example focused on a single simple html page.&lt;/p>
+&lt;h3 id="step-two-turn-the-behaviors-into-steps">Step Two: Turn the Behaviors Into Steps
+&lt;/h3>&lt;p>In the steps folder, create a file called &lt;code>clickbutton_step.py&lt;/code>. Note that
+it has the same prefix &lt;code>clickbutton&lt;/code> as the corresponding features file we
+created above, that is required for each feature file. The contents of this
+file will have:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;span class="lnt">16
+&lt;/span>&lt;span class="lnt">17
+&lt;/span>&lt;span class="lnt">18
+&lt;/span>&lt;span class="lnt">19
+&lt;/span>&lt;span class="lnt">20
+&lt;/span>&lt;span class="lnt">21
+&lt;/span>&lt;span class="lnt">22
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="kn">from&lt;/span> &lt;span class="nn">nose.tools&lt;/span> &lt;span class="kn">import&lt;/span> &lt;span class="n">assert_equal&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">assert_not_equal&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">assert_true&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">from&lt;/span> &lt;span class="nn">selenium.webdriver.common.by&lt;/span> &lt;span class="kn">import&lt;/span> &lt;span class="n">By&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nd">@given&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;I navigate to the Home page&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">def&lt;/span> &lt;span class="nf">step_impl&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">context&lt;/span>&lt;span class="p">):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">context&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">home_page&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">navigate&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s2">&amp;#34;http://localhost:8080/&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nd">@given&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;I see that the pagename is WikiViz&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">def&lt;/span> &lt;span class="nf">step_impl&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">context&lt;/span>&lt;span class="p">):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">assert_equal&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">context&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">home_page&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">get_page_title&lt;/span>&lt;span class="p">(),&lt;/span> &lt;span class="s2">&amp;#34;WikiViz&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nd">@given&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;I see the header &amp;#34;Hello World!&amp;#34;&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">def&lt;/span> &lt;span class="nf">step_impl&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">context&lt;/span>&lt;span class="p">):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">assert_equal&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">context&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">home_page&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">get_page_header&lt;/span>&lt;span class="p">(),&lt;/span> &lt;span class="s2">&amp;#34;Hello World!&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nd">@when&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;I click the button&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">def&lt;/span> &lt;span class="nf">step_impl&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">context&lt;/span>&lt;span class="p">):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">context&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">home_page&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">click_button&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nd">@then&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;I see that the pagename is no longer WikiViz&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">def&lt;/span> &lt;span class="nf">step_impl&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">context&lt;/span>&lt;span class="p">):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">assert_not_equal&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">context&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">home_page&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">get_page_title&lt;/span>&lt;span class="p">(),&lt;/span> &lt;span class="s2">&amp;#34;WikiViz&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>So the pattern here is starting to become clear:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-fallback" data-lang="fallback">&lt;span class="line">&lt;span class="cl">User experience ---&amp;gt; Steps ---&amp;gt; Page functions
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>We have chosen to create the steps before the page functions here because that is
+a natural way to proceed. The steps will tell you what functions you need to create,
+and then afterwards, create those functions with the narrow scope defined by
+the steps.&lt;/p>
+&lt;h3 id="step-three-turn-the-steps-into-implemented-functions">Step Three: Turn the Steps Into Implemented Functions
+&lt;/h3>&lt;p>Let&amp;rsquo;s stick with our simple home page as detailed above. We
+can look behind the curtain of this page by using our browser&amp;rsquo;s
+developer console. On Chrome, for example, it is in settings &amp;gt; More Tools &amp;gt;
+Developer Tools. This gives you many great tools to inspect
+the code and help you locate elements in your code. For our
+simple example, that isn&amp;rsquo;t so necessary, but as this example
+is expanded to include javascript which makes the page more dynamic,
+these developer tools become very useful. In this screenshot below,
+for example, we see how it helps us identify elements of the code.&lt;/p>
+&lt;p>&lt;img src="https://tdj28.github.io/p/headless-python-selenium-with-behave/assets/devtools.png"
+width="2874"
+height="340"
+srcset="https://tdj28.github.io/p/headless-python-selenium-with-behave/assets/devtools_hu883988367208694196.png 480w, https://tdj28.github.io/p/headless-python-selenium-with-behave/assets/devtools_hu13945435235453160345.png 1024w"
+loading="lazy"
+alt="png"
+class="gallery-image"
+data-flex-grow="845"
+data-flex-basis="2028px"
+>&lt;/p>
+&lt;p>These elements become key as we find key elements to use in our
+testing.&lt;/p>
+&lt;p>In the pages folder, create a file called &lt;code>home_page.py&lt;/code> with the following content:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;span class="lnt">16
+&lt;/span>&lt;span class="lnt">17
+&lt;/span>&lt;span class="lnt">18
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-fallback" data-lang="fallback">&lt;span class="line">&lt;span class="cl">from selenium.webdriver.common.by import By
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">from browser import Browser
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">class HomePage(Browser):
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> # Home Page Actions
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> def navigate(self, address):
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> self.driver.get(address)
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> def get_page_title(self):
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> return self.driver.title
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> def get_page_header(self):
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> return self.driver.find_element_by_class_name(&amp;#34;example&amp;#34;).text
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> def click_button(self, *locator):
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> self.driver.find_element_by_class_name(&amp;#34;button&amp;#34;).click()
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>Because the source code of our simple page assigns the first and only
+h1 header by giving it the class &amp;ldquo;example&amp;rdquo;, that makes it easy
+to &lt;code>find_element_by_class_name&lt;/code>. If in fact we had multiple h1 elements
+with that class, we would have to use the plural &lt;code>find_elements_by_class_name&lt;/code>
+instead, which returns a list that we could submit for testing (e.g.
+we would know what the first h1 should be, the second, etc.).&lt;/p>
+&lt;p>So for our homepage, we have created the HomePage class, which inherits the
+Browser class we created previously, and we define the actions we will
+need on this page for testing. When we add other pages to our example
+web app in later blog entries, we will create a new file in the pages
+folder, one for each page. In this way, we keep the details nice and cleanly
+compartmentalized. If we have a subset of pages that share much in common,
+we can create a class for that subset, and then have individual pages
+inherit that class, and so on.&lt;/p>
+&lt;p>Also note that there are multiple ways we can identify elements, including
+&lt;code>xpath&lt;/code>. In this file, we add four tools associated with our homepage.
+The first is a navigate function, the second returns the pagename,
+the third returns the h1 element, and
+the fourth clicks on the button we just added that will send us to a new page.&lt;/p>
+&lt;h3 id="step-four-define-the-browser">Step Four: Define The Browser
+&lt;/h3>&lt;p>Before we can make use of the defined behaviors and expectations,
+we need to set up our browser and display (for headless).&lt;/p>
+&lt;p>Create the file &lt;code>features/browser.py&lt;/code> with the following content
+if you want selenium to run on your laptop or desktop in a way
+that you can watch it run through the tests:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="kn">from&lt;/span> &lt;span class="nn">selenium&lt;/span> &lt;span class="kn">import&lt;/span> &lt;span class="n">webdriver&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">class&lt;/span> &lt;span class="nc">Browser&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nb">object&lt;/span>&lt;span class="p">):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">driver&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">webdriver&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">Firefox&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">driver&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">implicitly_wait&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">15&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">driver&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">set_page_load_timeout&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">10&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">driver&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">maximize_window&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">def&lt;/span> &lt;span class="nf">close&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">context&lt;/span>&lt;span class="p">):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">context&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">driver&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">close&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>Here, I&amp;rsquo;ve made the page timeout ten seconds
+because if my page is taking longer than ten seconds to load,
+to me that is a pretty good reason for it to fail. I would actually
+recommend you being more generous than not, and instead build in timing
+features to test for load time rather than have the tests timeout as
+an indication that your page is slow, but again, this is meant to be
+a baseline example.&lt;/p>
+&lt;p>For those wishing to use headless testing (on a remote server, no live
+browser to watch), the above file will look like:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;span class="lnt">16
+&lt;/span>&lt;span class="lnt">17
+&lt;/span>&lt;span class="lnt">18
+&lt;/span>&lt;span class="lnt">19
+&lt;/span>&lt;span class="lnt">20
+&lt;/span>&lt;span class="lnt">21
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="kn">from&lt;/span> &lt;span class="nn">selenium&lt;/span> &lt;span class="kn">import&lt;/span> &lt;span class="n">webdriver&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">from&lt;/span> &lt;span class="nn">pyvirtualdisplay&lt;/span> &lt;span class="kn">import&lt;/span> &lt;span class="n">Display&lt;/span> &lt;span class="c1"># Comment this out for live browser&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">class&lt;/span> &lt;span class="nc">BDisplay&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nb">object&lt;/span>&lt;span class="p">):&lt;/span> &lt;span class="c1"># Comment this out for live browser&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">display&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">Display&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">visible&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">size&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">1000&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">1000&lt;/span>&lt;span class="p">))&lt;/span> &lt;span class="c1"># Comment this out for live browser&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">display&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">start&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="c1"># Comment this out for live browser&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">def&lt;/span> &lt;span class="nf">stop&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">context&lt;/span>&lt;span class="p">):&lt;/span> &lt;span class="c1"># Comment this out for live browser&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">context&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">display&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">stop&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="c1"># Comment this out for live browser&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">class&lt;/span> &lt;span class="nc">Browser&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nb">object&lt;/span>&lt;span class="p">):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">driver&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">webdriver&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">Firefox&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">driver&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">implicitly_wait&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">15&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">driver&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">set_page_load_timeout&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">10&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">driver&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">maximize_window&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">def&lt;/span> &lt;span class="nf">close&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">context&lt;/span>&lt;span class="p">):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">context&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">driver&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">close&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;h3 id="step-five-putting-it-all-together">Step Five: Putting it all together
+&lt;/h3>&lt;p>Finally, we need to have an environment definition to tie everything together.
+This will tell &lt;code>behave&lt;/code> what page classes to import and tell it what to
+do before and after the tests are ran.&lt;/p>
+&lt;p>If the &lt;code>features&lt;/code> folder, create a file called &lt;code>environment.py&lt;/code> with the content:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="kn">from&lt;/span> &lt;span class="nn">selenium&lt;/span> &lt;span class="kn">import&lt;/span> &lt;span class="n">webdriver&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">from&lt;/span> &lt;span class="nn">browser&lt;/span> &lt;span class="kn">import&lt;/span> &lt;span class="n">BDisplay&lt;/span> &lt;span class="c1"># Comment this out for live browser&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">from&lt;/span> &lt;span class="nn">browser&lt;/span> &lt;span class="kn">import&lt;/span> &lt;span class="n">Browser&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">from&lt;/span> &lt;span class="nn">pages.home_page&lt;/span> &lt;span class="kn">import&lt;/span> &lt;span class="n">HomePage&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">def&lt;/span> &lt;span class="nf">before_all&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">context&lt;/span>&lt;span class="p">):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">context&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">display&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">BDisplay&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="c1"># Comment this out for live browser&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">context&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">browser&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">Browser&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">context&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">home_page&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">HomePage&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">def&lt;/span> &lt;span class="nf">after_all&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">context&lt;/span>&lt;span class="p">):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">context&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">browser&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">close&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">context&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">display&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">stop&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="c1"># Comment this out for live browser&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>In the folder above features, assuming you&amp;rsquo;ve installed &lt;code>behave&lt;/code> via pip already,
+simply run &lt;code>behave&lt;/code>. If all goes well, we get an output that indicates the tests
+ran and their pass/fail status:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">&lt;span class="o">(&lt;/span>env&lt;span class="o">)&lt;/span> tdj28:~/workspace/selenium_tests &lt;span class="o">(&lt;/span>master&lt;span class="o">)&lt;/span> $ behave
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">Feature: ClickButton &lt;span class="c1"># features/clickbutton.feature:1&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> Scenario: Click Away From Homepage &lt;span class="c1"># features/clickbutton.feature:3&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> Given I navigate to the Home page &lt;span class="c1"># features/steps/clickbutton_steps.py:4 0.112s&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> And I see that the pagename is WikiViz &lt;span class="c1"># features/steps/clickbutton_steps.py:8 0.005s&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> And I see the header &lt;span class="s2">&amp;#34;Hello World!&amp;#34;&lt;/span> &lt;span class="c1"># features/steps/clickbutton_steps.py:12 0.046s&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> When I click the button &lt;span class="c1"># features/steps/clickbutton_steps.py:16 0.112s&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> Then I see that the pagename is no longer WikiViz &lt;span class="c1"># features/steps/clickbutton_steps.py:20 0.009s&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="m">1&lt;/span> feature passed, &lt;span class="m">0&lt;/span> failed, &lt;span class="m">0&lt;/span> skipped
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="m">1&lt;/span> scenario passed, &lt;span class="m">0&lt;/span> failed, &lt;span class="m">0&lt;/span> skipped
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="m">5&lt;/span> steps passed, &lt;span class="m">0&lt;/span> failed, &lt;span class="m">0&lt;/span> skipped, &lt;span class="m">0&lt;/span> undefined
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">Took 0m0.283s
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;h3 id="find-the-code-here">Find the code here
+&lt;/h3>&lt;p>For your convenience, the selenium code is
+collected &lt;a class="link" href="https://github.com/tdj28/wikiviz_demo_selenium/tree/20180826" target="_blank" rel="noopener"
+>here&lt;/a>.&lt;/p></description></item></channel></rss>

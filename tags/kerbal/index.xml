@@ -1,0 +1,546 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Kerbal on</title><link>https://tdj28.github.io/tags/kerbal/</link><description>Recent content in Kerbal on</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sat, 23 Jul 2022 15:21:05 -0700</lastBuildDate><atom:link href="https://tdj28.github.io/tags/kerbal/index.xml" rel="self" type="application/rss+xml"/><item><title>Automating the circularization of Apollo in Kerbal with python, KRPC, and Physics</title><link>https://tdj28.github.io/p/automating-the-circularization-of-apollo-in-kerbal-with-python-krpc-and-physics/</link><pubDate>Sat, 23 Jul 2022 15:21:05 -0700</pubDate><guid>https://tdj28.github.io/p/automating-the-circularization-of-apollo-in-kerbal-with-python-krpc-and-physics/</guid><description>&lt;p>&lt;img src="https://tdj28.github.io/p/automating-the-circularization-of-apollo-in-kerbal-with-python-krpc-and-physics/assets/index-02bb3.png"
+width="826"
+height="400"
+srcset="https://tdj28.github.io/p/automating-the-circularization-of-apollo-in-kerbal-with-python-krpc-and-physics/assets/index-02bb3_hu17640899176375355365.png 480w, https://tdj28.github.io/p/automating-the-circularization-of-apollo-in-kerbal-with-python-krpc-and-physics/assets/index-02bb3_hu17225187193578015173.png 1024w"
+loading="lazy"
+alt="A picture of the kerbal apollo rocket"
+class="gallery-image"
+data-flex-grow="206"
+data-flex-basis="495px"
+>&lt;/p>
+&lt;p>&lt;a class="link" href="krpc_sanbox-into-orbit.ipynb" >Download&lt;/a> the corresponding notebook.&lt;/p>
+&lt;h2 id="introduction">Introduction
+&lt;/h2>&lt;p>Kerbal Space Program (KSP) (1.0) is a semi-physics-realistic space exploration simulation. While it is not realistic enough to plan actual space missions, it is a fun educational tool that can get us started. With the kRPC mod (remote procedure call, which enables programatic interaction with KSP&amp;rsquo;s API), the educational potential is expanded into the world of programming. In this notebook, we will automate taking the Kerbins to the moon and back using Python, Physics, and KSP with the kRPC mod.&lt;/p>
+&lt;h3 id="installation">Installation
+&lt;/h3>&lt;h4 id="get-ksp">Get KSP
+&lt;/h4>&lt;ul>
+&lt;li>Purchase and install the Kerbal Space Program (v 1.0) &lt;a class="link" href="https://www.kerbalspaceprogram.com/" target="_blank" rel="noopener"
+>here&lt;/a>.&lt;/li>
+&lt;li>You&amp;rsquo;ll also need the &lt;a class="link" href="https://www.kerbalspaceprogram.com/games-kerbal-space-program-making-history-expansion" target="_blank" rel="noopener"
+>&amp;ldquo;Making History&amp;rdquo; expansion&lt;/a> which has the Apollo rocket equivalent, unless you prefer to save some money and build an equivalent rocket yourself or find the ship file online. Note that this code is tested and verified to work with the Acopollo rocket found in this expansion, so you may have to make adjustments to get alternative rockets to work.&lt;/li>
+&lt;/ul>
+&lt;h4 id="install-the-krpc-mod">Install the KRPC mod
+&lt;/h4>&lt;p>Follow &lt;a class="link" href="https://krpc.github.io/krpc/getting-started.html" target="_blank" rel="noopener"
+>this guide&lt;/a> to install the kRPC mod. More or less, you&amp;rsquo;ll grab the kRPC folder and put it in the &lt;code>GameData&lt;/code> folder wherever Kerbal is installed on your workstation.&lt;/p>
+&lt;p>&lt;img src="https://tdj28.github.io/p/automating-the-circularization-of-apollo-in-kerbal-with-python-krpc-and-physics/assets/index-439c4.png"
+width="735"
+height="323"
+srcset="https://tdj28.github.io/p/automating-the-circularization-of-apollo-in-kerbal-with-python-krpc-and-physics/assets/index-439c4_hu2563673172473898305.png 480w, https://tdj28.github.io/p/automating-the-circularization-of-apollo-in-kerbal-with-python-krpc-and-physics/assets/index-439c4_hu12312013963594548964.png 1024w"
+loading="lazy"
+alt="An image that shows the folder structure of KSP on Windows"
+class="gallery-image"
+data-flex-grow="227"
+data-flex-basis="546px"
+>&lt;/p>
+&lt;h4 id="prepping-the-jupyter-workspace">Prepping the jupyter workspace
+&lt;/h4>&lt;p>If you are using Windows, &lt;a class="link" href="https://docs.anaconda.com/anaconda/install/windows/" target="_blank" rel="noopener"
+>installing anaconda&lt;/a> may be your quickest route, and then set up a kerbal environment by opensing a terminal and running:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-fallback" data-lang="fallback">&lt;span class="line">&lt;span class="cl">conda create --name kerbal
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>You&amp;rsquo;ll only need to create the envrionment once. Next activate it:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-fallback" data-lang="fallback">&lt;span class="line">&lt;span class="cl">conda activate kerbal
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>If you are on MacOS or Linux, you can use virtualenv instead (although conda can work too).&lt;/p>
+&lt;p>and then install the following packages:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;span class="lnt">5
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-gdscript3" data-lang="gdscript3">&lt;span class="line">&lt;span class="cl">&lt;span class="n">pip&lt;/span> &lt;span class="n">install&lt;/span> &lt;span class="n">setuptools&lt;/span>&lt;span class="o">==&lt;/span>&lt;span class="mf">57.5&lt;/span>&lt;span class="o">.&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">pip&lt;/span> &lt;span class="n">install&lt;/span> &lt;span class="n">protobuf&lt;/span>&lt;span class="o">~=&lt;/span>&lt;span class="mf">3.19&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="mi">0&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">pip&lt;/span> &lt;span class="n">install&lt;/span> &lt;span class="n">krpc&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">pip&lt;/span> &lt;span class="n">install&lt;/span> &lt;span class="n">jupyter&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">pip&lt;/span> &lt;span class="n">install&lt;/span> &lt;span class="n">ipykernel&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>Or preferably, use a requirements file:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;span class="lnt">5
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-gdscript3" data-lang="gdscript3">&lt;span class="line">&lt;span class="cl">&lt;span class="n">setuptools&lt;/span>&lt;span class="o">==&lt;/span>&lt;span class="mf">57.5&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="mi">0&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">protobuf&lt;/span>&lt;span class="o">~=&lt;/span>&lt;span class="mf">3.19&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="mi">0&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">krpc&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">jupyter&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">ipykernel&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>If you are using Python &amp;gt;= 3.8, you&amp;rsquo;ll have to do a little hack. Open the file in your virtual environment files with an editor and make the following change.&lt;/p>
+&lt;ul>
+&lt;li>
+&lt;p>FILE: Should be in your virtual environment with something along the lines of &lt;code>venv/lib/python3.10/site-packages/krpc/types.py&lt;/code> on line 222 and 227.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Replace:&lt;/p>
+&lt;/li>
+&lt;/ul>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="n">collections&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">Iterable&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>with&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="n">collections&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">abc&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">Iterable&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>Next, create the kernel that we&amp;rsquo;ll be using for this notebook:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-fallback" data-lang="fallback">&lt;span class="line">&lt;span class="cl">python -m ipykernel install --user --name kerbal --display-name &amp;#34;Python (kerbal)&amp;#34;
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>and then to launch jupyter:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-fallback" data-lang="fallback">&lt;span class="line">&lt;span class="cl">jupyter notebook
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;h2 id="going-to-the-mun">Going to the Mun
+&lt;/h2>&lt;h3 id="connecting-to-ksp">Connecting to KSP
+&lt;/h3>&lt;p>In our first code blocks, we will be importing the libraries we need to get our astronauts to the Mun via Python. We will then connect to KSP vis the krpc plugin (assumes you have KSP up and running and the plugin working).&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="kn">import&lt;/span> &lt;span class="nn">krpc&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">import&lt;/span> &lt;span class="nn">math&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">import&lt;/span> &lt;span class="nn">time&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">from&lt;/span> &lt;span class="nn">IPython.display&lt;/span> &lt;span class="kn">import&lt;/span> &lt;span class="n">clear_output&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">display&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="n">conn&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">krpc&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">connect&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;h3 id="loading-the-apollo-rocket">Loading the Apollo rocket
+&lt;/h3>&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="n">conn&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">space_center&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">load&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s2">&amp;#34;apollo001&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;span class="lnt">5
+&lt;/span>&lt;span class="lnt">6
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="n">vessel&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">conn&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">space_center&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">active_vessel&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Set up streams for telemetry&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">ut&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">conn&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">add_stream&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nb">getattr&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">conn&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">space_center&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;ut&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">altitude&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">conn&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">add_stream&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nb">getattr&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">flight&lt;/span>&lt;span class="p">(),&lt;/span> &lt;span class="s1">&amp;#39;mean_altitude&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">apoapsis&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">conn&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">add_stream&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nb">getattr&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">orbit&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;apoapsis_altitude&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">stage_2_resources&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">resources_in_decouple_stage&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">stage&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mi">2&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">cumulative&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="kc">False&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="n">obt_frame&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">orbit&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">body&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">non_rotating_reference_frame&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">mun_orbit&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">conn&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">space_center&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">bodies&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s2">&amp;#34;Mun&amp;#34;&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">position&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">obt_frame&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;h3 id="gravity-turn-into-orbit">Gravity Turn into Orbit
+&lt;/h3>&lt;p>In this next section, we are calculating the gravity turn angle. The sample provided by the KRPC samples uses a simple fraction to define the trun angle in degrees:
+\[ \alpha = 90(\frac{a - s}{ e - s}) \]
+where \(a\) is the current altitude, \(s\) is the altitude in which we want to start slowly turning the rocket horizontally, and \(e\) is the ending altitude where we want to have completed our turn upon reaching. This could be defined by a simple function&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="k">def&lt;/span> &lt;span class="nf">get_gravity_turn_angle&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">alt&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">start_alt&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">end_alt&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">turn_angle&lt;/span>&lt;span class="p">):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">new_turn_angle&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="mi">0&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="n">alt&lt;/span> &lt;span class="o">&amp;gt;&lt;/span> &lt;span class="n">start_alt&lt;/span> &lt;span class="ow">and&lt;/span> &lt;span class="n">alt&lt;/span> &lt;span class="o">&amp;lt;&lt;/span> &lt;span class="n">end_alt&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">frac&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="n">alt&lt;/span> &lt;span class="o">-&lt;/span> &lt;span class="n">start_alt&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="o">/&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">end_alt&lt;/span> &lt;span class="o">-&lt;/span> &lt;span class="n">start_alt&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">new_turn_angle&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">frac&lt;/span> &lt;span class="o">*&lt;/span> &lt;span class="mf">90.0&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nb">abs&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">new_turn_angle&lt;/span> &lt;span class="o">-&lt;/span> &lt;span class="n">turn_angle&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="o">&amp;gt;&lt;/span> &lt;span class="mf">0.5&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">turn_angle&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">new_turn_angle&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">else&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">turn_angle&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="mi">0&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">return&lt;/span> &lt;span class="n">turn_angle&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>In a future blog post, we will improve the gravity turn by invoking Physics to get a more accurate turn rate. For now, as a proof of concept and to focus on the circularization physics, we will proceed with this rough linear gravity turn. Next, we actually launch the rocket and execute the gravity turn so that we reach a target apoapsis:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">auto_pilot&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">target_pitch_and_heading&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">90&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">90&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">auto_pilot&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">engage&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">control&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">throttle&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="mi">1&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;span class="lnt">16
+&lt;/span>&lt;span class="lnt">17
+&lt;/span>&lt;span class="lnt">18
+&lt;/span>&lt;span class="lnt">19
+&lt;/span>&lt;span class="lnt">20
+&lt;/span>&lt;span class="lnt">21
+&lt;/span>&lt;span class="lnt">22
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">control&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">activate_next_stage&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">turn_angle&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="mi">0&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">start_alt&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="mi">250&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">end_alt&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="mi">45000&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">target_alt&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="mi">700000&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">state&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="s2">&amp;#34;LiftOff&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">while&lt;/span> &lt;span class="n">turn_angle&lt;/span> &lt;span class="o">&amp;gt;=&lt;/span> &lt;span class="mi">0&lt;/span> &lt;span class="ow">and&lt;/span> &lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">control&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">throttle&lt;/span> &lt;span class="o">&amp;gt;&lt;/span> &lt;span class="mi">0&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">clear_output&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">wait&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="kc">True&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">turn_angle&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">get_gravity_turn_angle&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">altitude&lt;/span>&lt;span class="p">(),&lt;/span> &lt;span class="n">start_alt&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">end_alt&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">turn_angle&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="n">turn_angle&lt;/span> &lt;span class="o">!=&lt;/span> &lt;span class="mi">0&lt;/span> &lt;span class="ow">and&lt;/span> &lt;span class="n">apoapsis&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="o">&amp;lt;&lt;/span> &lt;span class="n">target_alt&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">auto_pilot&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">target_pitch_and_heading&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">90&lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="n">turn_angle&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">90&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">state&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="s2">&amp;#34;GravityTurn&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="n">apoapsis&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="o">&amp;gt;&lt;/span> &lt;span class="n">target_alt&lt;/span>&lt;span class="o">*&lt;/span>&lt;span class="mf">0.90&lt;/span> &lt;span class="ow">and&lt;/span> &lt;span class="n">apoapsis&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="o">&amp;lt;&lt;/span> &lt;span class="n">target_alt&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">state&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="s2">&amp;#34;ApoapsisRefinement&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">control&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">throttle&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="mf">0.25&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">while&lt;/span> &lt;span class="n">apoapsis&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="o">&amp;lt;&lt;/span> &lt;span class="n">target_alt&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">pass&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="n">apoapsis&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="o">&amp;gt;=&lt;/span> &lt;span class="n">target_alt&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">state&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="s2">&amp;#34;GoalApoapsisAchieved&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">control&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">throttle&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="mf">0.00&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>&lt;img src="https://tdj28.github.io/p/automating-the-circularization-of-apollo-in-kerbal-with-python-krpc-and-physics/assets/index-41f20.png"
+width="989"
+height="555"
+srcset="https://tdj28.github.io/p/automating-the-circularization-of-apollo-in-kerbal-with-python-krpc-and-physics/assets/index-41f20_hu7997958309861504924.png 480w, https://tdj28.github.io/p/automating-the-circularization-of-apollo-in-kerbal-with-python-krpc-and-physics/assets/index-41f20_hu15015125646027603701.png 1024w"
+loading="lazy"
+alt="The rocket starts to turn, making a 30 degree angle relative to the normal"
+class="gallery-image"
+data-flex-grow="178"
+data-flex-basis="427px"
+>&lt;/p>
+&lt;p>As the rocket climbs higher, it will ease into an orientation perpendicular to the radius of the Earth:&lt;/p>
+&lt;p>&lt;img src="https://tdj28.github.io/p/automating-the-circularization-of-apollo-in-kerbal-with-python-krpc-and-physics/assets/index-a87dd.png"
+width="993"
+height="559"
+srcset="https://tdj28.github.io/p/automating-the-circularization-of-apollo-in-kerbal-with-python-krpc-and-physics/assets/index-a87dd_hu8397308396075874361.png 480w, https://tdj28.github.io/p/automating-the-circularization-of-apollo-in-kerbal-with-python-krpc-and-physics/assets/index-a87dd_hu11992571244312514553.png 1024w"
+loading="lazy"
+alt="as it nears cutoff, the rocket is nearly perpendicular to the normal"
+class="gallery-image"
+data-flex-grow="177"
+data-flex-basis="426px"
+>&lt;/p>
+&lt;h2 id="circularizing-the-orbit">Circularizing the orbit
+&lt;/h2>&lt;p>For an idealized circular orbit above atmospheric effects, the gravitational pull of the Earth on the body provides the centripetal force, with circular orbital radius \(r\) and let&lt;/p>
+&lt;p>\[\mu = GM\]&lt;/p>
+&lt;p>where \(G\) is the universal gravitational constant and \(M\) is the mass of the large body (here, the Earth)&lt;/p>
+&lt;p>KRPC provides an easy way to access that value for any given celestial body:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="n">mu&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">orbit&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">body&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">gravitational_parameter&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>Back to Physics, we now have two equations from the basics of Newtonian physics, namely:&lt;/p>
+&lt;ul>
+&lt;li>Cetripital Force: \[ F_c = \frac{m_0 v^2}{r}\]&lt;/li>
+&lt;li>Gravitational Force: \[ F_g = \frac{m_0 GM}{r^2}\]&lt;/li>
+&lt;/ul>
+&lt;p>Since these must balance out for an object to be in stead orbit, we can solve to find the ideal velocity \(v\) for a given orbit at radius \(r\):&lt;/p>
+&lt;p>\[ F_g = m_0 a = \frac{m_0 \mu}{r^2} =\frac{m_0 v^2}{r} \]&lt;/p>
+&lt;p>\[\implies v = \sqrt{ \frac{\mu}{r} }\]&lt;/p>
+&lt;p>We see here that this velocity is entirely independent of the mass of the body, hence a very heavy object and a very light object which orbit at the same radius must be traveling at the same speed, assuming of course they are out of the region where atmospheric drag plays an important role.&lt;/p>
+&lt;h3 id="finding-an-equation-for-the-circularization-of-an-orbit">Finding an equation for the circularization of an orbit
+&lt;/h3>&lt;p>That is a starting point, but we have to dive deeper to calculate the numbers needed to actually achieve an approximation of this idealized orbit.&lt;/p>
+&lt;p>Our next step is to invoke the &lt;em>vis-viva equation&lt;/em> (or also called the &lt;em>orbital-energy-invariance law&lt;/em>). We begin by noting that the &lt;strong>specific orbital energy&lt;/strong> of an orbiting object and the body it is orbiting is defined as a sum of their mutual potential energy and their total kinetic energy:&lt;/p>
+&lt;p>\[ E_O = E_p + E_k\]&lt;/p>
+&lt;p>For scenarios such as ours, where the orbiting object is much smaller in both size and mass than the body it orbits, this energy becomes easier to calculate since we can treat the larger body as being the center of our reference frame and hence at rest. We can also neglect the potential energy experienced by the gravitational attraction of the larger body by the smaller body. In this case,&lt;/p>
+&lt;p>\[ E_O = \frac{m_0 v^2_0}{2} - \frac{\mu m_0}{r_0} \]&lt;/p>
+&lt;p>The specific total energy is given as \(E_o/m_0 = \epsilon\) and this is conserved throughout the orbit (assuming the rocket is not burning fuel in an idealized orbit). Let \(v_a\) and \(r_a\) be the velocity and radius of the orbiting body at the apoapsis, and \(v_p\) and \(r_p\) similarly at the periapsis. Then energy conservation gives us the relation,&lt;/p>
+&lt;p>\[ \epsilon = \frac{v_a^2}{2} - \frac{\mu}{r_a} = \frac{v_p^2}{2} - \frac{\mu}{r_p} \]&lt;/p>
+&lt;p>At both \(r_a\) and \(r_p\), the velocity and radius vectors are perpendicular to each other, where hence we can invoke the conservation of angular momentum to give&lt;/p>
+&lt;p>\[ r_p v_p = r_a v_a = Constant \]&lt;/p>
+&lt;p>This gives us the relation that
+\[ v_p =- \frac{r_a}{r_p}v_a \]&lt;/p>
+&lt;p>and with some rearrangement of these equations, we get,&lt;/p>
+&lt;p>\[ \frac{1}{2}\left( \frac{r_p^2 -r_a^2}{r_p^2}\right) v_a^2 = \mu \left(\frac{1}{r_a} - \frac{1}{r_p}\right) \]
+\[ \frac{1}{2}v_a^2 = \mu \frac{r_p}{r_a \left( r_p + r_a \right)} \]&lt;/p>
+&lt;h4 id="relating-this-to-elipses-the-apoapsis-and-periapsis">Relating this to elipses, the apoapsis and periapsis
+&lt;/h4>&lt;p>From geometry of an ellipse that relates the semimajor axis to \(r_p\) and \(r_a\), \(2a = r_p + r_a\)&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="n">r&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">orbit&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">apoapsis&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">a1&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">orbit&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">semi_major_axis&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>We substitute 2a in the our prior kinetic energy equation:
+\[ \frac{1}{2}v_a^2 = \mu \frac{2a -r_a}{2 r_a a} \]
+\[ \frac{1}{2}v_a^2 = \mu \left(\frac{1}{r_a} - \frac{1}{2a}\right) \]&lt;/p>
+&lt;p>\[ v_a^2 = \mu \left( \frac{2}{r_a} - \frac{1}{a}\right) \]&lt;/p>
+&lt;p>In a circularized orbit, \(a = r\), and so the velocity we need to have is&lt;/p>
+&lt;p>\[ v_a^2 = \mu \left( \frac{2}{r_a} - \frac{1}{r_a}\right) = \mu \left( \frac{1}{r_a}\right) \]&lt;/p>
+&lt;p>The \(\Delta v\) we need to achieve is the difference between these two velocities,&lt;/p>
+&lt;p>$$ \Delta v = \sqrt{ \mu} \left( \sqrt{\left( \frac{1}{r_a}\right) } - \sqrt{\left( \frac{2}{r_a} - \frac{1}{a}\right)}\right) $$
+$$ = \sqrt{\frac{\mu}{r_a}}\left( 1 - \sqrt{ \frac{2a -r_a}{a}}\right) $$&lt;/p>
+&lt;p>In krpc code,&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="n">delta_v&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">math&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">sqrt&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">mu&lt;/span>&lt;span class="o">/&lt;/span>&lt;span class="n">r&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="o">*&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="n">math&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">sqrt&lt;/span>&lt;span class="p">((&lt;/span>&lt;span class="mi">2&lt;/span>&lt;span class="o">*&lt;/span>&lt;span class="n">a1&lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="n">r&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="o">/&lt;/span>&lt;span class="n">a1&lt;/span>&lt;span class="p">))&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>With this number in hand, we can do a little more math which will be discussed in more detail later to find the burn time. This calculation is highly dependent on the engine and design of the rocket in question:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;span class="lnt">5
+&lt;/span>&lt;span class="lnt">6
+&lt;/span>&lt;span class="lnt">7
+&lt;/span>&lt;span class="lnt">8
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="n">f&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">available_thrust&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">Isp&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">specific_impulse&lt;/span> &lt;span class="o">*&lt;/span> &lt;span class="mf">9.82&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">m0&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">mass&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">m1&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">m0&lt;/span> &lt;span class="o">/&lt;/span> &lt;span class="n">math&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">exp&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">delta_v&lt;/span> &lt;span class="o">/&lt;/span> &lt;span class="n">Isp&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">fr&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">f&lt;/span> &lt;span class="o">/&lt;/span> &lt;span class="n">Isp&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">burn_time&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="n">m0&lt;/span> &lt;span class="o">-&lt;/span> &lt;span class="n">m1&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="o">/&lt;/span> &lt;span class="n">fr&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="n">node&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">control&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">add_node&lt;/span>&lt;span class="p">(&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">ut&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="o">+&lt;/span> &lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">orbit&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">time_to_apoapsis&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">prograde&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">delta_v&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;span class="lnt">16
+&lt;/span>&lt;span class="lnt">17
+&lt;/span>&lt;span class="lnt">18
+&lt;/span>&lt;span class="lnt">19
+&lt;/span>&lt;span class="lnt">20
+&lt;/span>&lt;span class="lnt">21
+&lt;/span>&lt;span class="lnt">22
+&lt;/span>&lt;span class="lnt">23
+&lt;/span>&lt;span class="lnt">24
+&lt;/span>&lt;span class="lnt">25
+&lt;/span>&lt;span class="lnt">26
+&lt;/span>&lt;span class="lnt">27
+&lt;/span>&lt;span class="lnt">28
+&lt;/span>&lt;span class="lnt">29
+&lt;/span>&lt;span class="lnt">30
+&lt;/span>&lt;span class="lnt">31
+&lt;/span>&lt;span class="lnt">32
+&lt;/span>&lt;span class="lnt">33
+&lt;/span>&lt;span class="lnt">34
+&lt;/span>&lt;span class="lnt">35
+&lt;/span>&lt;span class="lnt">36
+&lt;/span>&lt;span class="lnt">37
+&lt;/span>&lt;span class="lnt">38
+&lt;/span>&lt;span class="lnt">39
+&lt;/span>&lt;span class="lnt">40
+&lt;/span>&lt;span class="lnt">41
+&lt;/span>&lt;span class="lnt">42
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># https://krpc.github.io/krpc/tutorials/launch-into-orbit.html&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nb">print&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;Orientating ship for circularization burn&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">auto_pilot&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">disengage&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">auto_pilot&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">sas&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="kc">True&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">time&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">sleep&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mf">.1&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">auto_pilot&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">sas_mode&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">auto_pilot&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">sas_mode&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">maneuver&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">auto_pilot&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">wait&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nb">print&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;Waiting until circularization burn&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">burn_ut&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">ut&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="o">+&lt;/span> &lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">orbit&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">time_to_apoapsis&lt;/span> &lt;span class="o">-&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="n">burn_time&lt;/span>&lt;span class="o">/&lt;/span>&lt;span class="mf">2.&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">lead_time&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="mi">5&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">conn&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">space_center&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">warp_to&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">burn_ut&lt;/span> &lt;span class="o">-&lt;/span> &lt;span class="n">lead_time&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Execute burn&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nb">print&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;Ready to execute burn&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">time_to_apoapsis&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">conn&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">add_stream&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nb">getattr&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">orbit&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;time_to_apoapsis&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">while&lt;/span> &lt;span class="n">time_to_apoapsis&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="o">-&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="n">burn_time&lt;/span>&lt;span class="o">/&lt;/span>&lt;span class="mf">2.&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="o">&amp;gt;&lt;/span> &lt;span class="mi">0&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">pass&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">auto_pilot&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">wait&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nb">print&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;Executing burn&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">control&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">throttle&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="mf">1.0&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">time&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">sleep&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">burn_time&lt;/span> &lt;span class="o">-&lt;/span> &lt;span class="mf">0.05&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nb">print&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;Fine tuning&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">control&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">throttle&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="mf">0.05&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">remaining_burn&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">conn&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">add_stream&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">node&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">remaining_burn_vector&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">node&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">reference_frame&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">#vessel.auto_pilot.engage()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">auto_pilot&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">disengage&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">auto_pilot&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">sas&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="kc">True&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">time&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">sleep&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mf">.1&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">auto_pilot&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">sas_mode&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">auto_pilot&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">sas_mode&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">maneuver&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">control&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">throttle&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="mf">0.03&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">while&lt;/span> &lt;span class="n">node&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">remaining_delta_v&lt;/span> &lt;span class="o">&amp;gt;&lt;/span> &lt;span class="mi">4&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">pass&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">control&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">throttle&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="mf">0.0&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">node&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">remove&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">time&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">sleep&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">5&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nb">print&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;Launch complete&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;pre>&lt;code>Orientating ship for circularization burn
+Waiting until circularization burn
+Ready to execute burn
+Executing burn
+Fine tuning
+Launch complete
+&lt;/code>&lt;/pre>
+&lt;p>If all went well, you should be in a fairly accurate (and we can make it even better!) circularized orbit:&lt;/p>
+&lt;p>&lt;img src="https://tdj28.github.io/p/automating-the-circularization-of-apollo-in-kerbal-with-python-krpc-and-physics/assets/index-2e331.png"
+width="786"
+height="525"
+srcset="https://tdj28.github.io/p/automating-the-circularization-of-apollo-in-kerbal-with-python-krpc-and-physics/assets/index-2e331_hu2218312690310119773.png 480w, https://tdj28.github.io/p/automating-the-circularization-of-apollo-in-kerbal-with-python-krpc-and-physics/assets/index-2e331_hu13096795042021448279.png 1024w"
+loading="lazy"
+alt="an orbital view of the rocket showing a circularized orbit"
+class="gallery-image"
+data-flex-grow="149"
+data-flex-basis="359px"
+>&lt;/p>
+&lt;p>Now that we have circularized our orbit, we can do some house keeping and eject uneeded components from the rocket. In a future iteration, we will want to eject these as soon as we clear the atmosphere in order to reduce as much mass as soon as possible:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;span class="lnt">5
+&lt;/span>&lt;span class="lnt">6
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Drop stage 1&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">control&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">activate_next_stage&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Drop the escape rocket&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">control&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">activate_next_stage&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Drop the shields to lower weight&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">vessel&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">control&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">activate_next_stage&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>&lt;img src="https://tdj28.github.io/p/automating-the-circularization-of-apollo-in-kerbal-with-python-krpc-and-physics/assets/index-50aec.png"
+width="515"
+height="346"
+srcset="https://tdj28.github.io/p/automating-the-circularization-of-apollo-in-kerbal-with-python-krpc-and-physics/assets/index-50aec_hu18435129135423642554.png 480w, https://tdj28.github.io/p/automating-the-circularization-of-apollo-in-kerbal-with-python-krpc-and-physics/assets/index-50aec_hu8836306924092878690.png 1024w"
+loading="lazy"
+alt="showing the rocket against the milkyway with less stages"
+class="gallery-image"
+data-flex-grow="148"
+data-flex-basis="357px"
+>&lt;/p></description></item></channel></rss>

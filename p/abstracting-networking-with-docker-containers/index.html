@@ -1,0 +1,224 @@
+<!doctype html><html lang=en-us dir=ltr><head><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><meta name=description content="Docker comes with a default network, but you can make your own network of unlimited complexity."><title>Abstracting Networking with Docker Containers</title>
+<link rel=canonical href=https://tdj28.github.io/p/abstracting-networking-with-docker-containers/><link rel=stylesheet href=/scss/style.min.a8973e64013f393b33658832ff110095f30eb03e142d9ad3540bb8edbbed8261.css><meta property='og:title' content="Abstracting Networking with Docker Containers"><meta property='og:description' content="Docker comes with a default network, but you can make your own network of unlimited complexity."><meta property='og:url' content='https://tdj28.github.io/p/abstracting-networking-with-docker-containers/'><meta property='og:site_name' content><meta property='og:type' content='article'><meta property='article:section' content='Post'><meta property='article:tag' content='devops'><meta property='article:tag' content='sre'><meta property='article:tag' content='networking'><meta property='article:published_time' content='2016-03-03T19:21:05-07:00'><meta property='article:modified_time' content='2016-03-03T19:21:05-07:00'><meta name=twitter:title content="Abstracting Networking with Docker Containers"><meta name=twitter:description content="Docker comes with a default network, but you can make your own network of unlimited complexity."><link rel="shortcut icon" href=/favicon.ico></head><body class=article-page><script>(function(){const e="StackColorScheme";localStorage.getItem(e)||localStorage.setItem(e,"auto")})()</script><script>(function(){const t="StackColorScheme",e=localStorage.getItem(t),n=window.matchMedia("(prefers-color-scheme: dark)").matches===!0;e=="dark"||e==="auto"&&n?document.documentElement.dataset.scheme="dark":document.documentElement.dataset.scheme="light"})()</script><div class="container main-container flex on-phone--column extended"><aside class="sidebar left-sidebar sticky compact"><button class="hamburger hamburger--spin" type=button id=toggle-menu aria-label="Toggle Menu">
+<span class=hamburger-box><span class=hamburger-inner></span></span></button><header><figure class=site-avatar><a href=/><img src=/img/avatar_hu15237315471355360968.png width=300 height=300 class=site-logo loading=lazy alt=Avatar>
+</a><span class=emoji>TJ</span></figure><div class=site-meta><h1 class=site-name><a href=/></a></h1><h2 class=site-description></h2></div></header><ol class=menu-social><li><a href=https://github.com/tdj28 target=_blank title=GitHub rel=me><svg class="icon icon-tabler icon-tabler-brand-github" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6.0 00-1.3-3.2 4.2 4.2.0 00-.1-3.2s-1.1-.3-3.5 1.3a12.3 12.3.0 00-6.2.0C6.5 2.8 5.4 3.1 5.4 3.1a4.2 4.2.0 00-.1 3.2A4.6 4.6.0 004 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21"/></svg></a></li><li><a href=https://x.com/tdj11100 target=_blank title=Twitter rel=me><svg class="icon icon-tabler icon-tabler-brand-twitter" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M22 4.01c-1 .49-1.98.689-3 .99-1.121-1.265-2.783-1.335-4.38-.737S11.977 6.323 12 8v1c-3.245.083-6.135-1.395-8-4 0 0-4.182 7.433 4 11-1.872 1.247-3.739 2.088-6 2 3.308 1.803 6.913 2.423 10.034 1.517 3.58-1.04 6.522-3.723 7.651-7.742a13.84 13.84.0 00.497-3.753C20.18 7.773 21.692 5.25 22 4.009z"/></svg></a></li><li id=dark-mode-toggle><svg class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="8" cy="12" r="2"/><rect x="2" y="6" width="20" height="12" rx="6"/></svg>
+<svg class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="16" cy="12" r="2"/><rect x="2" y="6" width="20" height="12" rx="6"/></svg>
+<span></span></li></ol><ol class=menu id=main-menu></ol></aside><aside class="sidebar right-sidebar sticky"><section class="widget archives"><div class=widget-icon id=toc-toggle><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-notes"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 3m0 2a2 2 0 012-2h10a2 2 0 012 2v14a2 2 0 01-2 2H7a2 2 0 01-2-2z"/><path d="M9 7h6"/><path d="M9 11h6"/><path d="M9 15h4"/></svg></div><h2 class="widget-title section-title"></h2><div class=widget--toc id=toc-content><nav id=TableOfContents><ol><li><ol><li><ol><li><a href=#what-is-netns>What is NetNS?</a></li><li><a href=#what-is-docker>What is Docker?</a></li><li><a href=#using-netns-with-docker-to-model-your-home-network>Using NetNS with Docker to Model Your Home Network</a></li></ol></li></ol></li></ol></nav></div></section><script>document.getElementById("toc-toggle").addEventListener("click",function(){var e=document.getElementById("toc-content");e.style.display==="none"?e.style.display="block":e.style.display="none"})</script></aside><main class="main full-width"><article class=main-article><header class=article-header><div class=article-details><header class=article-category><a href=/categories/deep-dive/>Deep-Dive
+</a><a href=/categories/software/>Software</a></header><div class=article-title-wrapper><h2 class=article-title><a href=/p/abstracting-networking-with-docker-containers/>Abstracting Networking with Docker Containers</a></h2></div><footer class=article-time><div><svg class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><path d="M11.795 21H5a2 2 0 01-2-2V7a2 2 0 012-2h12a2 2 0 012 2v4"/><circle cx="18" cy="18" r="4"/><path d="M15 3v4"/><path d="M7 3v4"/><path d="M3 11h16"/><path d="M18 16.496V18l1 1"/></svg>
+<time class=article-time--published>Mar 03, 2016</time></div><div><svg class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
+<time class=article-time--reading>7 minute read</time></div></footer></div></header><section class=article-content><h1 id=goal>Goal:</h1><p>Network Namespace is a Linux tool that allows for the easy virtualization of network models. While it has plenty of <a class=link href=http://blog.scottlowe.org/2013/09/04/introducing-linux-network-namespaces/ target=_blank rel=noopener>practical uses directly on the hardware</a>, this will be a quick introduction to how it can be used to create more complex Docker networks that could be extended to modeling, say, the infrastructure of a data center or cloud provider.</p><p><a class=link href=https://github.com/brandon-rhodes/fopnp/tree/m/playground target=_blank rel=noopener>Brandon Rhodes created</a> a great &ldquo;playground&rdquo; for his book <a class=link href=https://github.com/brandon-rhodes/fopnp target=_blank rel=noopener>Foundations of Python Network Programming</a>. Inspired by this example, we will create a small simple netns/docker example that is more bite-sized for those who aren&rsquo;t familiar with these tools.</p><h4 id=what-is-netns>What is NetNS?</h4><p>Very briefly, netns is a tool that allows us to create virtual network namespaces that are isolated from each other.</p><p>Let&rsquo;s let its man page speak for itself:</p><blockquote><p>A network namespace is logically another copy of the network stack, with its own routes, firewall rules, and network devices.</p></blockquote><blockquote><p>By default a process inherits its network namespace from its parent.Initially all the processes share the same default network namespace from the init process.</p></blockquote><p>One&rsquo;s imagination can fly away at this point thinking of the multitude of possibilities this offers for security, but that should be a focus of a separate entry.</p><p>Creating a new namespace, here let&rsquo;s call it newtonsapple for the sake of example, is as easy as</p><pre><code>:::bash
+ip netns add newtonsapple
+</code></pre><p>Of course there is much, much more to it than that, but we will see more details about what netns can do below.</p><h4 id=what-is-docker>What is Docker?</h4><p>Chances are pretty high that if you found this page, you have a pretty good idea of what Docker is. I will put it in the context of our netns discussion. In some ways, Docker is to the OS what netns is the machine&rsquo;s networking configuration. Docker is a way to run processes in an isolated environment that does not use virtualization of hardware, but rather has direct access to the hardware via having direct access to the kernel. There are plenty of places out there that will provide fantastic introductions to Docker, but for the sake of this entry, it helps to think of netns and Docker as sort of cousins in that they both create isolated sandboxes which can interact in controlled ways with the <em>real</em> OS/network outside of their bubbles (in the case of Docker this bubble is called a <strong>container</strong> and in case of netns this bubble is called a <strong>namespace</strong>).</p><h6 id=docker-networking>Docker Networking</h6><p>Docker has a great <a class=link href=https://docs.docker.com/engine/userguide/networking/ target=_blank rel=noopener>tutorial on Docker Networking</a> and it would be inefficient to recreate that here in any way. Instead I want to highlight the key parts that are relevant to this entry.</p><p>The first thing to note is that Docker automatically creates its own network. If you do an <code>ifconfig</code> or an <code>ip a</code> on a machine running a Docker server, you will find an entry corresponding to this network listed in the output:</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>docker0   Link encap:Ethernet  HWaddr 56:84:7a:fe:97:99  
+</span></span><span class=line><span class=cl>          inet addr:172.17.42.1  Bcast:0.0.0.0  Mask:255.255.0.0
+</span></span><span class=line><span class=cl> ...
+</span></span></code></pre></td></tr></table></div></div><p>Docker also creates a network internal to each container (loopback) and you can launch a container that hooks directly in to the host network (<code>docker run --net=host</code>). The default is to launch it on the docker0 network, though it is often useful to run it on the host network if, for example, it needs access to VPN connections and it isn&rsquo;t worth the effort to create further bridges. However, an interesting option is <code>--net=none</code>. This tells Docker to not touch the networking of the container and allows us to create our own networking for the containers.</p><h4 id=using-netns-with-docker-to-model-your-home-network>Using NetNS with Docker to Model Your Home Network</h4><h6 id=preliminary-setup>Preliminary setup</h6><p>This post will assume you are working from Ubuntu/Debian, though any Linux distribution will have these tools.</p><p>On Ubuntu, you have to create a directory <code>/var/run/netns</code> in order to use netns:</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>sudo mkdir -p /var/run/netns
+</span></span></code></pre></td></tr></table></div></div><p>Though this wasn&rsquo;t my experience, you may have to enable two Linux kernel modules as well:</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>sudo modprobe ip_nat_ftp nf_conntrack_ftp
+</span></span></code></pre></td></tr></table></div></div><p>You may also need to install bridge-utils if it isn&rsquo;t already installed:</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>sudo apt-get update
+</span></span><span class=line><span class=cl>sudo apt-get install bridge-utils
+</span></span></code></pre></td></tr></table></div></div><h6 id=bringing-up-the-containers-and-linking-netns>Bringing up the containers and linking netns</h6><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>docker run --net<span class=o>=</span>none --dns<span class=o>=</span>8.8.8.8 --name<span class=o>=</span>verizon -d ubuntu /bin/sh -c <span class=s2>&#34;while true; do echo &#34;&#34;; done&#34;</span>
+</span></span><span class=line><span class=cl><span class=nv>pid</span><span class=o>=</span><span class=k>$(</span>docker inspect -f <span class=s1>&#39;{{.State.Pid}}&#39;</span> verizon<span class=k>)</span>
+</span></span><span class=line><span class=cl>sudo ln -s /proc/<span class=nv>$pid</span>/ns/net /var/run/netns/verizon
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>docker run --net<span class=o>=</span>none --dns<span class=o>=</span>8.8.8.8 --name<span class=o>=</span>router -d ubuntu /bin/sh -c <span class=s2>&#34;while true; do echo &#34;&#34;; done&#34;</span>
+</span></span><span class=line><span class=cl><span class=nv>pid</span><span class=o>=</span><span class=k>$(</span>docker inspect -f <span class=s1>&#39;{{.State.Pid}}&#39;</span> router<span class=k>)</span>
+</span></span><span class=line><span class=cl>sudo ln -s /proc/<span class=nv>$pid</span>/ns/net /var/run/netns/router
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>docker run --net<span class=o>=</span>none --dns<span class=o>=</span>8.8.8.8 --name<span class=o>=</span>laptop -d ubuntu /bin/sh -c <span class=s2>&#34;while true; do echo &#34;&#34;; done&#34;</span>
+</span></span><span class=line><span class=cl><span class=nv>pid</span><span class=o>=</span><span class=k>$(</span>docker inspect -f <span class=s1>&#39;{{.State.Pid}}&#39;</span> laptop<span class=k>)</span>
+</span></span><span class=line><span class=cl>sudo ln -s /proc/<span class=nv>$pid</span>/ns/net /var/run/netns/laptop
+</span></span></code></pre></td></tr></table></div></div><h6 id=creating-network-interfaces>Creating Network Interfaces</h6><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>root@vagrant-ubuntu-trusty-64:~/code# ip netns <span class=nb>exec</span> verizon ip link list
+</span></span><span class=line><span class=cl>1: lo: &lt;LOOPBACK,UP,LOWER_UP&gt; mtu <span class=m>65536</span> qdisc noqueue state UNKNOWN mode DEFAULT group default
+</span></span><span class=line><span class=cl>    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+</span></span><span class=line><span class=cl>10: eth1: &lt;BROADCAST,MULTICAST&gt; mtu <span class=m>1500</span> qdisc noop state DOWN mode DEFAULT group default qlen <span class=m>1000</span>
+</span></span><span class=line><span class=cl>    link/ether f6:8b:e9:66:00:b0 brd ff:ff:ff:ff:ff:ff
+</span></span><span class=line><span class=cl>root@vagrant-ubuntu-trusty-64:~/code# ip netns <span class=nb>exec</span> router ip link list                                                                                        
+</span></span><span class=line><span class=cl>1: lo: &lt;LOOPBACK,UP,LOWER_UP&gt; mtu <span class=m>65536</span> qdisc noqueue state UNKNOWN mode DEFAULT group default
+</span></span><span class=line><span class=cl>    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+</span></span><span class=line><span class=cl>4: eth1: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu <span class=m>1500</span> qdisc pfifo_fast state UP mode DEFAULT group default qlen <span class=m>1000</span>
+</span></span><span class=line><span class=cl>    link/ether 36:7a:68:d8:a5:84 brd ff:ff:ff:ff:ff:ff
+</span></span><span class=line><span class=cl>9: eth0: &lt;NO-CARRIER,BROADCAST,MULTICAST,UP&gt; mtu <span class=m>1500</span> qdisc pfifo_fast state DOWN mode DEFAULT group default qlen <span class=m>1000</span>
+</span></span><span class=line><span class=cl>    link/ether fe:60:62:9d:1b:7b brd ff:ff:ff:ff:ff:ff
+</span></span><span class=line><span class=cl>root@vagrant-ubuntu-trusty-64:~/code# ip netns <span class=nb>exec</span> laptop ip link list                                                                                        
+</span></span><span class=line><span class=cl>1: lo: &lt;LOOPBACK,UP,LOWER_UP&gt; mtu <span class=m>65536</span> qdisc noqueue state UNKNOWN mode DEFAULT group default
+</span></span><span class=line><span class=cl>    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+</span></span><span class=line><span class=cl>7: eth1: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu <span class=m>1500</span> qdisc pfifo_fast state UP mode DEFAULT group default qlen <span class=m>1000</span>
+</span></span><span class=line><span class=cl>    link/ether f2:ee:9e:56:55:d4 brd ff:ff:ff:ff:ff:ff
+</span></span><span class=line><span class=cl>root@vagrant-ubuntu-trusty-64:~/code# brctl show
+</span></span><span class=line><span class=cl>bridge name     bridge id               STP enabled     interfaces
+</span></span><span class=line><span class=cl>docker0         8000.56847afe9799       no
+</span></span><span class=line><span class=cl>home            8000.821c2640a1ea       no              laptop_eth1
+</span></span></code></pre></td></tr></table></div></div><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1>### Create network namespaces</span>
+</span></span><span class=line><span class=cl>ip netns add levela
+</span></span><span class=line><span class=cl>ip netns add levelb
+</span></span><span class=line><span class=cl>ip netns add levelc
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>### Create peer devices</span>
+</span></span><span class=line><span class=cl>ip link add veth0a <span class=nb>type</span> veth peer name veth1a
+</span></span><span class=line><span class=cl>ip link add veth0b <span class=nb>type</span> veth peer name veth1b
+</span></span><span class=line><span class=cl>ip link add veth0c <span class=nb>type</span> veth peer name veth1c
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>### Put these devices in namespaces</span>
+</span></span><span class=line><span class=cl><span class=c1># veth0a remains in globalspace</span>
+</span></span><span class=line><span class=cl>ip link <span class=nb>set</span> veth1a netns levela
+</span></span><span class=line><span class=cl>ip link <span class=nb>set</span> veth0b netns levela
+</span></span><span class=line><span class=cl>ip link <span class=nb>set</span> veth1b netns levelb
+</span></span><span class=line><span class=cl>ip link <span class=nb>set</span> veth0c netns levelb
+</span></span><span class=line><span class=cl>ip link <span class=nb>set</span> veth1c netns levelc
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>### Set up Networks</span>
+</span></span><span class=line><span class=cl>ip netns <span class=nb>exec</span> levela ifconfig veth1a 172.16.1.0/24 up
+</span></span><span class=line><span class=cl>ip netns <span class=nb>exec</span> levelb ifconfig veth1b 10.1.1.1/24 up
+</span></span><span class=line><span class=cl>ip netns <span class=nb>exec</span> levelc ifconfig veth1c 192.168.1.1/24 up
+</span></span></code></pre></td></tr></table></div></div><p>At thist point we should be able to observer network namespaces and corresponding devices with their networks:</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># ip netns exec levela ip addr list</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>1: lo: &lt;LOOPBACK&gt; mtu <span class=m>65536</span> qdisc noop state DOWN group default
+</span></span><span class=line><span class=cl>    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+</span></span><span class=line><span class=cl>6: veth1a: &lt;NO-CARRIER,BROADCAST,MULTICAST,UP&gt; mtu <span class=m>1500</span> qdisc pfifo_fast state DOWN group default qlen <span class=m>1000</span>
+</span></span><span class=line><span class=cl>    link/ether ba:8c:ec:6e:71:db brd ff:ff:ff:ff:ff:ff
+</span></span><span class=line><span class=cl>    inet 172.16.1.0/24 brd 172.16.1.255 scope global veth1a
+</span></span><span class=line><span class=cl>       valid_lft forever preferred_lft forever
+</span></span><span class=line><span class=cl>9: veth0b: &lt;BROADCAST,MULTICAST&gt; mtu <span class=m>1500</span> qdisc noop state DOWN group default qlen <span class=m>1000</span>
+</span></span><span class=line><span class=cl>    link/ether 82:88:3d:09:e7:1f brd ff:ff:ff:ff:ff:ff
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># ip netns exec levelb ip addr list</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>1: lo: &lt;LOOPBACK&gt; mtu <span class=m>65536</span> qdisc noop state DOWN group default
+</span></span><span class=line><span class=cl>    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+</span></span><span class=line><span class=cl>8: veth1b: &lt;NO-CARRIER,BROADCAST,MULTICAST,UP&gt; mtu <span class=m>1500</span> qdisc pfifo_fast state DOWN group default qlen <span class=m>1000</span>
+</span></span><span class=line><span class=cl>    link/ether c2:c4:9c:2b:41:a5 brd ff:ff:ff:ff:ff:ff
+</span></span><span class=line><span class=cl>    inet 10.1.1.1/24 brd 10.1.1.255 scope global veth1b
+</span></span><span class=line><span class=cl>       valid_lft forever preferred_lft forever
+</span></span><span class=line><span class=cl>11: veth0c: &lt;BROADCAST,MULTICAST&gt; mtu <span class=m>1500</span> qdisc noop state DOWN group default qlen <span class=m>1000</span>
+</span></span><span class=line><span class=cl>    link/ether 96:a5:1c:5b:e3:8c brd ff:ff:ff:ff:ff:ff
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># ip netns exec levelc ip addr list</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>1: lo: &lt;LOOPBACK&gt; mtu <span class=m>65536</span> qdisc noop state DOWN group default
+</span></span><span class=line><span class=cl>    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+</span></span><span class=line><span class=cl>10: veth1c: &lt;NO-CARRIER,BROADCAST,MULTICAST,UP&gt; mtu <span class=m>1500</span> qdisc pfifo_fast state DOWN group default qlen <span class=m>1000</span>
+</span></span><span class=line><span class=cl>    link/ether 66:d7:ff:9b:65:63 brd ff:ff:ff:ff:ff:ff
+</span></span><span class=line><span class=cl>    inet 192.168.1.1/24 brd 192.168.1.255 scope global veth1c
+</span></span><span class=line><span class=cl>       valid_lft forever preferred_lft forever
+</span></span></code></pre></td></tr></table></div></div><p>and corresponding routes:</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># ip netns exec levela ip route list</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>172.16.1.0/24 dev veth1a  proto kernel  scope link  src 172.16.1.0
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># ip netns exec levelb ip route list</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>10.1.1.0/24 dev veth1b  proto kernel  scope link  src 10.1.1.1
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># ip netns exec levelc ip route list</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>192.168.1.0/24 dev veth1c  proto kernel  scope link  src 192.168.1.1
+</span></span></code></pre></td></tr></table></div></div></section><footer class=article-footer><section class=article-tags><a href=/tags/devops/>Devops</a>
+<a href=/tags/sre/>Sre</a>
+<a href=/tags/networking/>Networking</a></section><section class=article-copyright><svg class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="12" cy="12" r="9"/><path d="M14.5 9a3.5 4 0 100 6"/></svg>
+<span>Licensed under CC BY-NC-SA 4.0</span></section></footer></article><aside class=related-content--wrapper><h2 class=section-title>Related content</h2><div class=related-content><div class="flex article-list--tile"><article><a href=/p/devops-101-chef-cookbook-with-testing/><div class=article-details><h2 class=article-title>DevOps 101: Chef Cookbook with Testing</h2></div></a></article><article><a href=/p/python-uses-operational-chaining-for-boolean-comparisons/><div class=article-details><h2 class=article-title>Python Uses Operational Chaining for Boolean Comparisons</h2></div></a></article><article><a href=/p/bayesian-look-at-rapid-tests/><div class=article-details><h2 class=article-title>Bayesian look at rapid tests</h2></div></a></article><article><a href=/p/automating-the-circularization-of-apollo-in-kerbal-with-python-krpc-and-physics/><div class=article-details><h2 class=article-title>Automating the circularization of Apollo in Kerbal with python, KRPC, and Physics</h2></div></a></article><article><a href=/p/a-risk-analysis-bowtie-diagram-in-latex/><div class=article-details><h2 class=article-title>A Risk Analysis Bowtie Diagram in Latex</h2></div></a></article></div></div></aside><footer class=site-footer><section class=copyright>&copy;
+2024</section><section class=powerby>You are a wonderful manifestation of the evolution of the universe.<br>Built with <a href=https://gohugo.io/ target=_blank rel=noopener>Hugo</a> / Theme --> <b><a href=https://github.com/CaiJimmy/hugo-theme-stack target=_blank rel=noopener data-version=3.26.0>Stack</a></b></section></footer><div class=pswp tabindex=-1 role=dialog aria-hidden=true><div class=pswp__bg></div><div class=pswp__scroll-wrap><div class=pswp__container><div class=pswp__item></div><div class=pswp__item></div><div class=pswp__item></div></div><div class="pswp__ui pswp__ui--hidden"><div class=pswp__top-bar><div class=pswp__counter></div><button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+<button class="pswp__button pswp__button--share" title=Share></button>
+<button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+<button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button><div class=pswp__preloader><div class=pswp__preloader__icn><div class=pswp__preloader__cut><div class=pswp__preloader__donut></div></div></div></div></div><div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap"><div class=pswp__share-tooltip></div></div><button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+</button>
+<button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)"></button><div class=pswp__caption><div class=pswp__caption__center></div></div></div></div></div><script src=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo=" crossorigin=anonymous defer></script><script src=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU=" crossorigin=anonymous defer></script><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css crossorigin=anonymous><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css crossorigin=anonymous></main></div><script src=https://cdn.jsdelivr.net/npm/node-vibrant@3.1.6/dist/vibrant.min.js integrity="sha256-awcR2jno4kI5X0zL8ex0vi2z+KMkF24hUW8WePSA9HM=" crossorigin=anonymous></script><script type=text/javascript src=/ts/main.js defer></script><script>(function(){const e=document.createElement("link");e.href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap",e.type="text/css",e.rel="stylesheet",document.head.appendChild(e)})()</script></body></html>

@@ -1,0 +1,948 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Sam2 on</title><link>https://tdj28.github.io/tags/sam2/</link><description>Recent content in Sam2 on</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Thu, 01 Aug 2024 19:21:05 -0700</lastBuildDate><atom:link href="https://tdj28.github.io/tags/sam2/index.xml" rel="self" type="application/rss+xml"/><item><title>Using YOLO people detection with Segment Anything 2 from META</title><link>https://tdj28.github.io/p/using-yolo-people-detection-with-segment-anything-2-from-meta/</link><pubDate>Thu, 01 Aug 2024 19:21:05 -0700</pubDate><guid>https://tdj28.github.io/p/using-yolo-people-detection-with-segment-anything-2-from-meta/</guid><description>&lt;h2 id="introduction">Introduction
+&lt;/h2>&lt;p>META&amp;rsquo;s recent release of &lt;a class="link" href="https://github.com/facebookresearch/segment-anything-2" target="_blank" rel="noopener"
+>Segment Anything 2&lt;/a> (SAM2) as a fully open-source project,
+where both the code &lt;em>and&lt;/em> the models are open-source, opens the door for many interesting use cases. One use case is people detection and
+tracking.&lt;/p>
+&lt;p>Suppose, for example, that I wanted to &lt;em>detect&lt;/em> and &lt;em>track&lt;/em> if people enter some region in my camera&amp;rsquo;s view. The
+&lt;a class="link" href="https://github.com/ultralytics/yolov5" target="_blank" rel="noopener"
+>YOLO toolset&lt;/a> has
+been widely used for people detection, and here we use it to detect people whose YOLO-created bounding box intersects with a chosen
+detection region. Then we use points around the center of that bounding box as seeds for tracking those individuals with SAM2.&lt;/p>
+&lt;style type="text/css">
+.notice {
+--title-color: #fff;
+--title-background-color: #6be;
+--content-color: #444;
+--content-background-color: #e7f2fa;
+}
+.notice.info {
+--title-background-color: #fb7;
+--content-background-color: #fec;
+}
+.notice.tip {
+--title-background-color: #5a5;
+--content-background-color: #efe;
+}
+.notice.warning {
+--title-background-color: #c33;
+--content-background-color: #fee;
+}
+@media (prefers-color-scheme:dark) {
+.notice {
+--title-color: #fff;
+--title-background-color: #069;
+--content-color: #ddd;
+--content-background-color: #023;
+}
+.notice.info {
+--title-background-color: #a50;
+--content-background-color: #420;
+}
+.notice.tip {
+--title-background-color: #363;
+--content-background-color: #121;
+}
+.notice.warning {
+--title-background-color: #800;
+--content-background-color: #400;
+}
+}
+body.dark .notice {
+--title-color: #fff;
+--title-background-color: #069;
+--content-color: #ddd;
+--content-background-color: #023;
+}
+body.dark .notice.info {
+--title-background-color: #a50;
+--content-background-color: #420;
+}
+body.dark .notice.tip {
+--title-background-color: #363;
+--content-background-color: #121;
+}
+body.dark .notice.warning {
+--title-background-color: #800;
+--content-background-color: #400;
+}
+.notice {
+padding: 18px;
+line-height: 24px;
+margin-bottom: 24px;
+border-radius: 4px;
+color: var(--content-color);
+background: var(--content-background-color);
+}
+.notice p:last-child {
+margin-bottom: 0
+}
+.notice-title {
+margin: -18px -18px 12px;
+padding: 4px 18px;
+border-radius: 4px 4px 0 0;
+font-weight: 700;
+color: var(--title-color);
+background: var(--title-background-color);
+}
+.icon-notice {
+display: inline-flex;
+align-self: center;
+margin-right: 8px;
+}
+.icon-notice img,
+.icon-notice svg {
+height: 1em;
+width: 1em;
+fill: currentColor;
+}
+.icon-notice img,
+.icon-notice.baseline svg {
+top: .125em;
+position: relative;
+}
+&lt;/style>&lt;div class="notice warning" >
+&lt;p class="notice-title">
+&lt;span class="icon-notice baseline">
+&lt;svg xmlns="http://www.w3.org/2000/svg" viewBox="126 76.5 300 300">
+&lt;path d="M297.431 324.397v-34.255c0-3.245-2.344-5.95-5.358-5.95h-32.146c-3.014 0-5.358 2.705-5.358 5.95v34.255c0 3.245 2.344 5.95 5.358 5.95h32.146c3.014 0 5.358-2.705 5.358-5.95Zm-.335-67.428 3.014-82.753c0-1.081-.502-2.524-1.674-3.425-1.005-.902-2.512-1.983-4.019-1.983h-36.834c-1.507 0-3.014 1.081-4.019 1.983-1.172.901-1.674 2.704-1.674 3.786l2.846 82.392c0 2.344 2.512 4.146 5.693 4.146h30.975c3.013 0 5.525-1.803 5.692-4.146Zm-2.344-168.39L423.34 342.425c3.683 7.032 3.516 15.686-.335 22.717-3.85 7.031-10.883 11.358-18.417 11.358H147.413c-7.534 0-14.566-4.327-18.417-11.358-3.85-7.031-4.018-15.685-.335-22.716L257.248 88.578C260.93 81.188 268.13 76.5 276 76.5c7.87 0 15.069 4.688 18.752 12.08Z"/>
+&lt;/svg>
+&lt;/span>Warning&lt;/p>&lt;p>This code is shared purely for research purposes and should not be used as-is for anything beyond education. The reliability of
+these tools in production settings needs to be tested thoroughly&lt;/p>&lt;/div>
+&lt;h3 id="code">Code
+&lt;/h3>&lt;p>Code for this post can be found &lt;a class="link" href="https://github.com/tdj28/using-yolo-with-sam2-and-monocular-depth" target="_blank" rel="noopener"
+>here&lt;/a>.&lt;/p>
+&lt;h3 id="procedure">Procedure
+&lt;/h3>&lt;ul>
+&lt;li>Create synthetic camera footage with &lt;a class="link" href="https://runwayml.com/" target="_blank" rel="noopener"
+>Runway ML Gen 3&lt;/a>&lt;/li>
+&lt;li>Pick a frame early in the synthetic footage, in this case, frame 30&lt;/li>
+&lt;li>Designate a detection region in the image&lt;/li>
+&lt;li>Get people detection bounding boxes from the image&lt;/li>
+&lt;li>Get a subset of detection bounding boxes which intersect with the detection region&lt;/li>
+&lt;li>Get the center point of the detection bounding boxes in that subset, and use those as seeds for SAM2 to track those individuals through the remainder of the video&lt;/li>
+&lt;/ul>
+&lt;h3 id="setup">Setup
+&lt;/h3>&lt;p>First, we need to set up the environment and install the required packages:&lt;/p>
+&lt;div class="notice tip" >
+&lt;p class="notice-title">
+&lt;span class="icon-notice baseline">
+&lt;svg xmlns="http://www.w3.org/2000/svg" viewBox="300.5 134 300 300">
+&lt;path d="M551.281 252.36c0-3.32-1.172-6.641-3.515-8.985l-17.774-17.578c-2.344-2.344-5.469-3.711-8.789-3.711-3.32 0-6.445 1.367-8.789 3.71l-79.687 79.493-44.141-44.14c-2.344-2.344-5.469-3.712-8.79-3.712-3.32 0-6.444 1.368-8.788 3.711l-17.774 17.579c-2.343 2.343-3.515 5.664-3.515 8.984 0 3.32 1.172 6.445 3.515 8.789l70.704 70.703c2.343 2.344 5.664 3.711 8.789 3.711 3.32 0 6.64-1.367 8.984-3.71l106.055-106.056c2.343-2.343 3.515-5.468 3.515-8.789ZM600.5 284c0 82.813-67.188 150-150 150-82.813 0-150-67.188-150-150 0-82.813 67.188-150 150-150 82.813 0 150 67.188 150 150Z"/>
+&lt;/svg>
+&lt;/span>Tip&lt;/p>&lt;p>The pinning of package versions here is to help ensure that this code can work as is out-of-the-box; however, you may
+get better results by unpinning these versions and just using the latest code. It is generally best practice to pin packages
+in &lt;em>production&lt;/em> environments.&lt;/p>&lt;/div>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;span class="lnt">16
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Install necessary packages&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="err">!&lt;/span>&lt;span class="n">pip&lt;/span> &lt;span class="n">install&lt;/span> &lt;span class="n">ultralytics&lt;/span>&lt;span class="o">==&lt;/span>&lt;span class="mf">8.2.71&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="err">!&lt;/span>&lt;span class="n">pip&lt;/span> &lt;span class="n">install&lt;/span> &lt;span class="n">torch&lt;/span>&lt;span class="o">==&lt;/span>&lt;span class="mf">2.4.0&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="err">!&lt;/span>&lt;span class="n">pip&lt;/span> &lt;span class="n">install&lt;/span> &lt;span class="n">torchvision&lt;/span>&lt;span class="o">==&lt;/span>&lt;span class="mf">0.19.0&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="err">!&lt;/span>&lt;span class="n">pip&lt;/span> &lt;span class="n">install&lt;/span> &lt;span class="n">torchaudio&lt;/span>&lt;span class="o">==&lt;/span>&lt;span class="mf">2.4.0&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="err">!&lt;/span>&lt;span class="n">pip&lt;/span> &lt;span class="n">install&lt;/span> &lt;span class="n">matplotlib&lt;/span>&lt;span class="o">==&lt;/span>&lt;span class="mf">3.9.1&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="err">!&lt;/span>&lt;span class="n">pip&lt;/span> &lt;span class="n">install&lt;/span> &lt;span class="n">pillow&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="err">!&lt;/span>&lt;span class="n">pip&lt;/span> &lt;span class="n">install&lt;/span> &lt;span class="n">opencv&lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="n">python&lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="n">headless&lt;/span>&lt;span class="o">==&lt;/span>&lt;span class="mf">4.10.0.84&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Clone the Segment Anything 2 repository and install it&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="err">!&lt;/span>&lt;span class="n">git&lt;/span> &lt;span class="n">clone&lt;/span> &lt;span class="n">https&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="o">//&lt;/span>&lt;span class="n">github&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">com&lt;/span>&lt;span class="o">/&lt;/span>&lt;span class="n">facebookresearch&lt;/span>&lt;span class="o">/&lt;/span>&lt;span class="n">segment&lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="n">anything&lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="mf">2.&lt;/span>&lt;span class="n">git&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="o">%&lt;/span>&lt;span class="n">cd&lt;/span> &lt;span class="n">segment&lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="n">anything&lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="mi">2&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="err">!&lt;/span>&lt;span class="n">pip&lt;/span> &lt;span class="n">install&lt;/span> &lt;span class="o">-&lt;/span>&lt;span class="n">e&lt;/span> &lt;span class="o">.&lt;/span> &lt;span class="o">-&lt;/span>&lt;span class="n">q&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Download the pre-trained SAM2 model&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="err">!&lt;/span>&lt;span class="n">wget&lt;/span> &lt;span class="o">-&lt;/span>&lt;span class="n">q&lt;/span> &lt;span class="n">https&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="o">//&lt;/span>&lt;span class="n">dl&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">fbaipublicfiles&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">com&lt;/span>&lt;span class="o">/&lt;/span>&lt;span class="n">segment_anything_2&lt;/span>&lt;span class="o">/&lt;/span>&lt;span class="mi">072824&lt;/span>&lt;span class="o">/&lt;/span>&lt;span class="n">sam2_hiera_large&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">pt&lt;/span> &lt;span class="o">-&lt;/span>&lt;span class="n">P&lt;/span> &lt;span class="n">checkpoints&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;h2 id="loading-and-processing-the-video">Loading and Processing the Video
+&lt;/h2>&lt;p>We start by converting the input video into frames. The frames will be processed to detect and segment people.&lt;/p>
+&lt;div class="notice info" >
+&lt;p class="notice-title">
+&lt;span class="icon-notice baseline">
+&lt;svg xmlns="http://www.w3.org/2000/svg" viewBox="92 59.5 300 300">
+&lt;path d="M292 303.25V272c0-3.516-2.734-6.25-6.25-6.25H267v-100c0-3.516-2.734-6.25-6.25-6.25h-62.5c-3.516 0-6.25 2.734-6.25 6.25V197c0 3.516 2.734 6.25 6.25 6.25H217v62.5h-18.75c-3.516 0-6.25 2.734-6.25 6.25v31.25c0 3.516 2.734 6.25 6.25 6.25h87.5c3.516 0 6.25-2.734 6.25-6.25Zm-25-175V97c0-3.516-2.734-6.25-6.25-6.25h-37.5c-3.516 0-6.25 2.734-6.25 6.25v31.25c0 3.516 2.734 6.25 6.25 6.25h37.5c3.516 0 6.25-2.734 6.25-6.25Zm125 81.25c0 82.813-67.188 150-150 150-82.813 0-150-67.188-150-150 0-82.813 67.188-150 150-150 82.813 0 150 67.188 150 150Z"/>
+&lt;/svg>
+&lt;/span>Info&lt;/p>&lt;p>As of the publication of this post, SAM2 only supports JPEG.&lt;/p>&lt;/div>
+&lt;p>First we do some initial setup:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;span class="lnt">16
+&lt;/span>&lt;span class="lnt">17
+&lt;/span>&lt;span class="lnt">18
+&lt;/span>&lt;span class="lnt">19
+&lt;/span>&lt;span class="lnt">20
+&lt;/span>&lt;span class="lnt">21
+&lt;/span>&lt;span class="lnt">22
+&lt;/span>&lt;span class="lnt">23
+&lt;/span>&lt;span class="lnt">24
+&lt;/span>&lt;span class="lnt">25
+&lt;/span>&lt;span class="lnt">26
+&lt;/span>&lt;span class="lnt">27
+&lt;/span>&lt;span class="lnt">28
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="kn">import&lt;/span> &lt;span class="nn">os&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">import&lt;/span> &lt;span class="nn">matplotlib.pyplot&lt;/span> &lt;span class="k">as&lt;/span> &lt;span class="nn">plt&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">from&lt;/span> &lt;span class="nn">PIL&lt;/span> &lt;span class="kn">import&lt;/span> &lt;span class="n">Image&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">import&lt;/span> &lt;span class="nn">matplotlib.patches&lt;/span> &lt;span class="k">as&lt;/span> &lt;span class="nn">patches&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">import&lt;/span> &lt;span class="nn">torch&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">import&lt;/span> &lt;span class="nn">numpy&lt;/span> &lt;span class="k">as&lt;/span> &lt;span class="nn">np&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">import&lt;/span> &lt;span class="nn">cv2&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">from&lt;/span> &lt;span class="nn">ultralytics&lt;/span> &lt;span class="kn">import&lt;/span> &lt;span class="n">YOLO&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">from&lt;/span> &lt;span class="nn">sam2.utils.misc&lt;/span> &lt;span class="kn">import&lt;/span> &lt;span class="n">get_sdpa_settings&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">from&lt;/span> &lt;span class="nn">sam2.build_sam&lt;/span> &lt;span class="kn">import&lt;/span> &lt;span class="n">build_sam2_video_predictor&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">from&lt;/span> &lt;span class="nn">sam2.build_sam&lt;/span> &lt;span class="kn">import&lt;/span> &lt;span class="n">build_sam2&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">from&lt;/span> &lt;span class="nn">sam2.sam2_image_predictor&lt;/span> &lt;span class="kn">import&lt;/span> &lt;span class="n">SAM2ImagePredictor&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">OLD_GPU&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">USE_FLASH_ATTN&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">MATH_KERNEL_ON&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">get_sdpa_settings&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nb">print&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="sa">f&lt;/span>&lt;span class="s2">&amp;#34;&lt;/span>&lt;span class="si">{&lt;/span>&lt;span class="n">OLD_GPU&lt;/span>&lt;span class="si">}&lt;/span>&lt;span class="s2">, &lt;/span>&lt;span class="si">{&lt;/span>&lt;span class="n">USE_FLASH_ATTN&lt;/span>&lt;span class="si">}&lt;/span>&lt;span class="s2">, &lt;/span>&lt;span class="si">{&lt;/span>&lt;span class="n">MATH_KERNEL_ON&lt;/span>&lt;span class="si">}&lt;/span>&lt;span class="s2">&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">torch&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">autocast&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">device_type&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s2">&amp;#34;cuda&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">dtype&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">torch&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">bfloat16&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="fm">__enter__&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">if&lt;/span> &lt;span class="n">torch&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">cuda&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">get_device_properties&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">major&lt;/span> &lt;span class="o">&amp;gt;=&lt;/span> &lt;span class="mi">8&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">torch&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">backends&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">cuda&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">matmul&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">allow_tf32&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="kc">True&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">torch&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">backends&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">cudnn&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">allow_tf32&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="kc">True&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">DEVICE&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">torch&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">device&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;cuda&amp;#39;&lt;/span> &lt;span class="k">if&lt;/span> &lt;span class="n">torch&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">cuda&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">is_available&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="k">else&lt;/span> &lt;span class="s1">&amp;#39;cpu&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">CHECKPOINT&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="sa">f&lt;/span>&lt;span class="s2">&amp;#34;&lt;/span>&lt;span class="si">{&lt;/span>&lt;span class="n">HOME&lt;/span>&lt;span class="si">}&lt;/span>&lt;span class="s2">/checkpoints/sam2_hiera_large.pt&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">CONFIG&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="s2">&amp;#34;sam2_hiera_l.yaml&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">#sam2_model = build_sam2(CONFIG, CHECKPOINT, device=DEVICE, apply_postprocessing=False)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">predictor&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">build_sam2_video_predictor&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">CONFIG&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">CHECKPOINT&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">device&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">DEVICE&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">apply_postprocessing&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="kc">False&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>Next we extract jpg frames from the mp4 video we uploaded to the &lt;code>videos&lt;/code> folder:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;span class="lnt">16
+&lt;/span>&lt;span class="lnt">17
+&lt;/span>&lt;span class="lnt">18
+&lt;/span>&lt;span class="lnt">19
+&lt;/span>&lt;span class="lnt">20
+&lt;/span>&lt;span class="lnt">21
+&lt;/span>&lt;span class="lnt">22
+&lt;/span>&lt;span class="lnt">23
+&lt;/span>&lt;span class="lnt">24
+&lt;/span>&lt;span class="lnt">25
+&lt;/span>&lt;span class="lnt">26
+&lt;/span>&lt;span class="lnt">27
+&lt;/span>&lt;span class="lnt">28
+&lt;/span>&lt;span class="lnt">29
+&lt;/span>&lt;span class="lnt">30
+&lt;/span>&lt;span class="lnt">31
+&lt;/span>&lt;span class="lnt">32
+&lt;/span>&lt;span class="lnt">33
+&lt;/span>&lt;span class="lnt">34
+&lt;/span>&lt;span class="lnt">35
+&lt;/span>&lt;span class="lnt">36
+&lt;/span>&lt;span class="lnt">37
+&lt;/span>&lt;span class="lnt">38
+&lt;/span>&lt;span class="lnt">39
+&lt;/span>&lt;span class="lnt">40
+&lt;/span>&lt;span class="lnt">41
+&lt;/span>&lt;span class="lnt">42
+&lt;/span>&lt;span class="lnt">43
+&lt;/span>&lt;span class="lnt">44
+&lt;/span>&lt;span class="lnt">45
+&lt;/span>&lt;span class="lnt">46
+&lt;/span>&lt;span class="lnt">47
+&lt;/span>&lt;span class="lnt">48
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Define directories&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">video_dir&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="sa">f&lt;/span>&lt;span class="s2">&amp;#34;&lt;/span>&lt;span class="si">{&lt;/span>&lt;span class="n">HOME&lt;/span>&lt;span class="si">}&lt;/span>&lt;span class="s2">/videos/&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">processed_dir&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="sa">f&lt;/span>&lt;span class="s2">&amp;#34;&lt;/span>&lt;span class="si">{&lt;/span>&lt;span class="n">HOME&lt;/span>&lt;span class="si">}&lt;/span>&lt;span class="s2">/processed&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Create the processed directory if it doesn&amp;#39;t exist&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">os&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">makedirs&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">video_dir&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">exist_ok&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="kc">True&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">os&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">makedirs&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">processed_dir&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">exist_ok&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="kc">True&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">def&lt;/span> &lt;span class="nf">convert_mp4_to_jpg&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">mp4_file&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">output_folder&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">one_frame_per_second&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="kc">False&lt;/span>&lt;span class="p">):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s2">&amp;#34;&amp;#34;&amp;#34;Converts an mp4 file to high-quality jpg files.&amp;#34;&amp;#34;&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">os&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">makedirs&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">output_folder&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">exist_ok&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="kc">True&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">video&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">cv2&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">VideoCapture&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">mp4_file&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">fps&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">video&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">get&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">cv2&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">CAP_PROP_FPS&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">frame_count&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="mi">0&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">saved_frame_count&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="mi">0&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">while&lt;/span> &lt;span class="kc">True&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">ret&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">frame&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">video&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">read&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="ow">not&lt;/span> &lt;span class="n">ret&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">break&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="n">one_frame_per_second&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># Calculate the frame number to save&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="n">frame_count&lt;/span> &lt;span class="o">%&lt;/span> &lt;span class="nb">int&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">fps&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="o">==&lt;/span> &lt;span class="mi">0&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">output_file&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">os&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">path&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">join&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">output_folder&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="sa">f&lt;/span>&lt;span class="s2">&amp;#34;&lt;/span>&lt;span class="si">{&lt;/span>&lt;span class="n">saved_frame_count&lt;/span>&lt;span class="si">:&lt;/span>&lt;span class="s2">04d&lt;/span>&lt;span class="si">}&lt;/span>&lt;span class="s2">.jpg&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">success&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">cv2&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">imwrite&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">output_file&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">frame&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="p">[&lt;/span>&lt;span class="nb">int&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">cv2&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">IMWRITE_JPEG_QUALITY&lt;/span>&lt;span class="p">),&lt;/span> &lt;span class="mi">95&lt;/span>&lt;span class="p">])&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="n">success&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">pass&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">#print(f&amp;#34;Frame {saved_frame_count} written successfully&amp;#34;)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">else&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nb">print&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="sa">f&lt;/span>&lt;span class="s2">&amp;#34;Failed to write frame &lt;/span>&lt;span class="si">{&lt;/span>&lt;span class="n">saved_frame_count&lt;/span>&lt;span class="si">}&lt;/span>&lt;span class="s2">&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">saved_frame_count&lt;/span> &lt;span class="o">+=&lt;/span> &lt;span class="mi">1&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">else&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">output_file&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">os&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">path&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">join&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">output_folder&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="sa">f&lt;/span>&lt;span class="s2">&amp;#34;&lt;/span>&lt;span class="si">{&lt;/span>&lt;span class="n">frame_count&lt;/span>&lt;span class="si">:&lt;/span>&lt;span class="s2">04d&lt;/span>&lt;span class="si">}&lt;/span>&lt;span class="s2">.jpg&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">success&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">cv2&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">imwrite&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">output_file&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">frame&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="p">[&lt;/span>&lt;span class="nb">int&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">cv2&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">IMWRITE_JPEG_QUALITY&lt;/span>&lt;span class="p">),&lt;/span> &lt;span class="mi">95&lt;/span>&lt;span class="p">])&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="n">success&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">pass&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">#print(f&amp;#34;Frame {frame_count} written successfully&amp;#34;)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">else&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nb">print&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="sa">f&lt;/span>&lt;span class="s2">&amp;#34;Failed to write frame &lt;/span>&lt;span class="si">{&lt;/span>&lt;span class="n">frame_count&lt;/span>&lt;span class="si">}&lt;/span>&lt;span class="s2">&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">frame_count&lt;/span> &lt;span class="o">+=&lt;/span> &lt;span class="mi">1&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">video&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">release&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">mp4_file_path&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="sa">f&lt;/span>&lt;span class="s2">&amp;#34;&lt;/span>&lt;span class="si">{&lt;/span>&lt;span class="n">HOME&lt;/span>&lt;span class="si">}&lt;/span>&lt;span class="s2">/videos/input_video.mp4&amp;#34;&lt;/span> &lt;span class="c1"># Replace with your mp4 file path&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">output_folder_path&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="sa">f&lt;/span>&lt;span class="s2">&amp;#34;&lt;/span>&lt;span class="si">{&lt;/span>&lt;span class="n">HOME&lt;/span>&lt;span class="si">}&lt;/span>&lt;span class="s2">/processed&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">convert_mp4_to_jpg&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">mp4_file_path&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">output_folder_path&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">one_frame_per_second&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="kc">False&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>Finally, we put all the frame file paths in a list for later processing:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;span class="lnt">5
+&lt;/span>&lt;span class="lnt">6
+&lt;/span>&lt;span class="lnt">7
+&lt;/span>&lt;span class="lnt">8
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Scan all the frame names in the processed directory&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">processed_frame_names&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="p">[&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">p&lt;/span> &lt;span class="k">for&lt;/span> &lt;span class="n">p&lt;/span> &lt;span class="ow">in&lt;/span> &lt;span class="n">os&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">listdir&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">output_folder_path&lt;/span> &lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="n">os&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">path&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">splitext&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">p&lt;/span>&lt;span class="p">)[&lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">lower&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="ow">in&lt;/span> &lt;span class="p">[&lt;/span>&lt;span class="s2">&amp;#34;.jpg&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s2">&amp;#34;.jpeg&amp;#34;&lt;/span>&lt;span class="p">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Sort frame names by extracting the numerical part of the filenames&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">processed_frame_names&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">sort&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">key&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="k">lambda&lt;/span> &lt;span class="n">p&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="nb">int&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">os&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">path&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">splitext&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">p&lt;/span>&lt;span class="p">)[&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">split&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;_&amp;#39;&lt;/span>&lt;span class="p">)[&lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">]))&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;h2 id="people-detection-and-segmentation">People Detection and Segmentation
+&lt;/h2>&lt;h3 id="detecting-people-with-yolo">Detecting people with YOLO
+&lt;/h3>&lt;p>Using YOLO, we detect people in the frames and highlight those whose bounding boxes fall within a designated red zone.&lt;/p>
+&lt;p>&lt;img src="https://tdj28.github.io/p/using-yolo-people-detection-with-segment-anything-2-from-meta/image.png"
+width="986"
+height="624"
+srcset="https://tdj28.github.io/p/using-yolo-people-detection-with-segment-anything-2-from-meta/image_hu13035796299764376080.png 480w, https://tdj28.github.io/p/using-yolo-people-detection-with-segment-anything-2-from-meta/image_hu15259200489652195642.png 1024w"
+loading="lazy"
+alt="Frame 30 with detection region masked transparent-red and blue bounding boxes from YOLO people detection"
+class="gallery-image"
+data-flex-grow="158"
+data-flex-basis="379px"
+>&lt;/p>
+&lt;p>We pick which frame to detect in and set an image_path variable:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># which frame to detect on and set an image_path variable&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">frame_idx&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="mi">30&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">image_path&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">os&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">path&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">join&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">output_folder_path&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">processed_frame_names&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">frame_idx&lt;/span>&lt;span class="p">])&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">image&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">cv2&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">imread&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">image_path&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>Next we add a function to plot the detection region:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;span class="lnt">16
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Define and add the rectangle patch with transparency&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">rect_x&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="mi">380&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">rect_y&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="mi">380&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">rect_width&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="mi">330&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">rect_height&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="mi">200&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Define a function to plot the figure and rectangle patch&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">def&lt;/span> &lt;span class="nf">plot_with_rect&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">ax&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">image&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">rect_x&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">rect_y&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">rect_width&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">rect_height&lt;/span>&lt;span class="p">):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># Display the original image&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">ax&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">imshow&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">image&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># Create and add the rectangle patch&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">rect&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">patches&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">Rectangle&lt;/span>&lt;span class="p">(&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">(&lt;/span>&lt;span class="n">rect_x&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">rect_y&lt;/span>&lt;span class="p">),&lt;/span> &lt;span class="n">rect_width&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">rect_height&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">linewidth&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">edgecolor&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;r&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">facecolor&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;red&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">alpha&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mf">0.3&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">ax&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">add_patch&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">rect&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>Now we perform the people detections:&lt;/p>
+&lt;div class="notice warning" >
+&lt;p class="notice-title">
+&lt;span class="icon-notice baseline">
+&lt;svg xmlns="http://www.w3.org/2000/svg" viewBox="126 76.5 300 300">
+&lt;path d="M297.431 324.397v-34.255c0-3.245-2.344-5.95-5.358-5.95h-32.146c-3.014 0-5.358 2.705-5.358 5.95v34.255c0 3.245 2.344 5.95 5.358 5.95h32.146c3.014 0 5.358-2.705 5.358-5.95Zm-.335-67.428 3.014-82.753c0-1.081-.502-2.524-1.674-3.425-1.005-.902-2.512-1.983-4.019-1.983h-36.834c-1.507 0-3.014 1.081-4.019 1.983-1.172.901-1.674 2.704-1.674 3.786l2.846 82.392c0 2.344 2.512 4.146 5.693 4.146h30.975c3.013 0 5.525-1.803 5.692-4.146Zm-2.344-168.39L423.34 342.425c3.683 7.032 3.516 15.686-.335 22.717-3.85 7.031-10.883 11.358-18.417 11.358H147.413c-7.534 0-14.566-4.327-18.417-11.358-3.85-7.031-4.018-15.685-.335-22.716L257.248 88.578C260.93 81.188 268.13 76.5 276 76.5c7.87 0 15.069 4.688 18.752 12.08Z"/>
+&lt;/svg>
+&lt;/span>Warning&lt;/p>&lt;p>We are using YOLOv5 here, but there are newer version available.&lt;/p>&lt;/div>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;span class="lnt">16
+&lt;/span>&lt;span class="lnt">17
+&lt;/span>&lt;span class="lnt">18
+&lt;/span>&lt;span class="lnt">19
+&lt;/span>&lt;span class="lnt">20
+&lt;/span>&lt;span class="lnt">21
+&lt;/span>&lt;span class="lnt">22
+&lt;/span>&lt;span class="lnt">23
+&lt;/span>&lt;span class="lnt">24
+&lt;/span>&lt;span class="lnt">25
+&lt;/span>&lt;span class="lnt">26
+&lt;/span>&lt;span class="lnt">27
+&lt;/span>&lt;span class="lnt">28
+&lt;/span>&lt;span class="lnt">29
+&lt;/span>&lt;span class="lnt">30
+&lt;/span>&lt;span class="lnt">31
+&lt;/span>&lt;span class="lnt">32
+&lt;/span>&lt;span class="lnt">33
+&lt;/span>&lt;span class="lnt">34
+&lt;/span>&lt;span class="lnt">35
+&lt;/span>&lt;span class="lnt">36
+&lt;/span>&lt;span class="lnt">37
+&lt;/span>&lt;span class="lnt">38
+&lt;/span>&lt;span class="lnt">39
+&lt;/span>&lt;span class="lnt">40
+&lt;/span>&lt;span class="lnt">41
+&lt;/span>&lt;span class="lnt">42
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="n">image&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">Image&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">open&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">image_path&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Display the image&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">figure&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">figsize&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">12&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">8&lt;/span>&lt;span class="p">))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">ax&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">gca&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">title&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="sa">f&lt;/span>&lt;span class="s2">&amp;#34;frame &lt;/span>&lt;span class="si">{&lt;/span>&lt;span class="n">frame_idx&lt;/span>&lt;span class="si">}&lt;/span>&lt;span class="s2">&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">imshow&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">image&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Add the patch to the Axes&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">plot_with_rect&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">ax&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">image&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">rect_x&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">rect_y&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">rect_width&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">rect_height&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Load YOLO model&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">yolo_model&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">YOLO&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;yolov5su.pt&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="c1"># Use the appropriate YOLOv5 model&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Load the image with OpenCV&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">cv2_image&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">cv2&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">cvtColor&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">np&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">array&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">image&lt;/span>&lt;span class="p">),&lt;/span> &lt;span class="n">cv2&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">COLOR_RGB2BGR&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Detect objects in the image&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">results&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">yolo_model&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">cv2_image&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Filter detections to find people&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">detected_people_centers&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="p">[]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">filtered_boxes&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="p">[]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">for&lt;/span> &lt;span class="n">result&lt;/span> &lt;span class="ow">in&lt;/span> &lt;span class="n">results&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">boxes&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">data&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="c1"># Accessing the first result and its boxes&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">x1&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">y1&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">x2&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">y2&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">conf&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="bp">cls&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">result&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">cpu&lt;/span>&lt;span class="p">()&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">numpy&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="c1"># Transfer to CPU and convert to numpy array&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nb">int&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="bp">cls&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="o">==&lt;/span> &lt;span class="mi">0&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="c1"># Class 0 is &amp;#39;person&amp;#39; in COCO&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="n">x1&lt;/span> &lt;span class="o">&amp;lt;&lt;/span> &lt;span class="n">rect_x&lt;/span> &lt;span class="o">+&lt;/span> &lt;span class="n">rect_width&lt;/span> &lt;span class="ow">and&lt;/span> &lt;span class="n">x2&lt;/span> &lt;span class="o">&amp;gt;&lt;/span> &lt;span class="n">rect_x&lt;/span> &lt;span class="ow">and&lt;/span> &lt;span class="n">y1&lt;/span> &lt;span class="o">&amp;lt;&lt;/span> &lt;span class="n">rect_y&lt;/span> &lt;span class="o">+&lt;/span> &lt;span class="n">rect_height&lt;/span> &lt;span class="ow">and&lt;/span> &lt;span class="n">y2&lt;/span> &lt;span class="o">&amp;gt;&lt;/span> &lt;span class="n">rect_y&lt;/span>&lt;span class="p">):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">center_x&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="n">x1&lt;/span> &lt;span class="o">+&lt;/span> &lt;span class="n">x2&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="o">/&lt;/span> &lt;span class="mi">2&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">center_y&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="n">y1&lt;/span> &lt;span class="o">+&lt;/span> &lt;span class="n">y2&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="o">/&lt;/span> &lt;span class="mi">2&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">detected_people_centers&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">append&lt;/span>&lt;span class="p">([&lt;/span>&lt;span class="n">center_x&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">center_y&lt;/span>&lt;span class="p">])&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">filtered_boxes&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">append&lt;/span>&lt;span class="p">((&lt;/span>&lt;span class="n">x1&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">y1&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">x2&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">y2&lt;/span>&lt;span class="p">))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># Draw bounding box&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">gca&lt;/span>&lt;span class="p">()&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">add_patch&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">patches&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">Rectangle&lt;/span>&lt;span class="p">((&lt;/span>&lt;span class="n">x1&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">y1&lt;/span>&lt;span class="p">),&lt;/span> &lt;span class="n">x2&lt;/span> &lt;span class="o">-&lt;/span> &lt;span class="n">x1&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">y2&lt;/span> &lt;span class="o">-&lt;/span> &lt;span class="n">y1&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">linewidth&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">edgecolor&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;b&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">facecolor&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;none&amp;#39;&lt;/span>&lt;span class="p">))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Convert detected people centers to a numpy array&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">points&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">np&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">array&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">detected_people_centers&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">labels&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">np&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">ones&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nb">len&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">points&lt;/span>&lt;span class="p">),&lt;/span> &lt;span class="n">dtype&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">np&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">int32&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Display the updated plot with bounding boxes&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">show&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;h3 id="initializing-the-segment-anything-2-predictor">Initializing the Segment Anything 2 Predictor
+&lt;/h3>&lt;p>We initialize the SAM2 predictor to generate masks for each detected person as follows.&lt;/p>
+&lt;div class="notice note" >
+&lt;p class="notice-title">
+&lt;span class="icon-notice baseline">
+&lt;svg xmlns="http://www.w3.org/2000/svg" viewBox="0 128 300 300">
+&lt;path d="M150 128c82.813 0 150 67.188 150 150 0 82.813-67.188 150-150 150C67.187 428 0 360.812 0 278c0-82.813 67.188-150 150-150Zm25 243.555v-37.11c0-3.515-2.734-6.445-6.055-6.445h-37.5c-3.515 0-6.445 2.93-6.445 6.445v37.11c0 3.515 2.93 6.445 6.445 6.445h37.5c3.32 0 6.055-2.93 6.055-6.445Zm-.39-67.188 3.515-121.289c0-1.367-.586-2.734-1.953-3.516-1.172-.976-2.93-1.562-4.688-1.562h-42.968c-1.758 0-3.516.586-4.688 1.563-1.367.78-1.953 2.148-1.953 3.515l3.32 121.29c0 2.734 2.93 4.882 6.64 4.882h36.134c3.515 0 6.445-2.148 6.64-4.883Z"/>
+&lt;/svg>
+&lt;/span>Note&lt;/p>&lt;p>You&amp;rsquo;ll notice that in addition to using the point of center of the bounding boxes, we use two more points slightly above it.
+This is done to improve the SAM2 detection results. The YOLO bounding box center is typically around the midsection of a
+detected individual, so selecting a few points above helps ensure we target the whole individual more reliably with SAM2.&lt;/p>&lt;/div>
+&lt;p>&lt;img src="https://tdj28.github.io/p/using-yolo-people-detection-with-segment-anything-2-from-meta/image-1.png"
+width="986"
+height="606"
+srcset="https://tdj28.github.io/p/using-yolo-people-detection-with-segment-anything-2-from-meta/image-1_hu464329368825143746.png 480w, https://tdj28.github.io/p/using-yolo-people-detection-with-segment-anything-2-from-meta/image-1_hu18249121634913855560.png 1024w"
+loading="lazy"
+alt="Frame 30 with detection region masked transparent-red and blue bounding boxes from YOLO people detection; in addition we now show the transparent masks from SAM2"
+class="gallery-image"
+data-flex-grow="162"
+data-flex-basis="390px"
+>&lt;/p>
+&lt;p>We use some functions to help us with plotting and DRYing up some detections.
+These first two functions come directly from SAM2&amp;rsquo;s example notebook:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;span class="lnt">16
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="k">def&lt;/span> &lt;span class="nf">show_mask&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">mask&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">ax&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">obj_id&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="kc">None&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">random_color&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="kc">False&lt;/span>&lt;span class="p">):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="n">random_color&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">color&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">np&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">concatenate&lt;/span>&lt;span class="p">([&lt;/span>&lt;span class="n">np&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">random&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">random&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">3&lt;/span>&lt;span class="p">),&lt;/span> &lt;span class="n">np&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">array&lt;/span>&lt;span class="p">([&lt;/span>&lt;span class="mf">0.6&lt;/span>&lt;span class="p">])],&lt;/span> &lt;span class="n">axis&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">else&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">cmap&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">get_cmap&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s2">&amp;#34;tab10&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">cmap_idx&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="mi">0&lt;/span> &lt;span class="k">if&lt;/span> &lt;span class="n">obj_id&lt;/span> &lt;span class="ow">is&lt;/span> &lt;span class="kc">None&lt;/span> &lt;span class="k">else&lt;/span> &lt;span class="n">obj_id&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">color&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">np&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">array&lt;/span>&lt;span class="p">([&lt;/span>&lt;span class="o">*&lt;/span>&lt;span class="n">cmap&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">cmap_idx&lt;/span>&lt;span class="p">)[:&lt;/span>&lt;span class="mi">3&lt;/span>&lt;span class="p">],&lt;/span> &lt;span class="mf">0.6&lt;/span>&lt;span class="p">])&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">h&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">w&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">mask&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">shape&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="mi">2&lt;/span>&lt;span class="p">:]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">mask_image&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">mask&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">reshape&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">h&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">w&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">1&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="o">*&lt;/span> &lt;span class="n">color&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">reshape&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">1&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="o">-&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">ax&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">imshow&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">mask_image&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">def&lt;/span> &lt;span class="nf">show_points&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">coords&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">labels&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">ax&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">marker_size&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mi">200&lt;/span>&lt;span class="p">):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">pos_points&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">coords&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">labels&lt;/span>&lt;span class="o">==&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">neg_points&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">coords&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">labels&lt;/span>&lt;span class="o">==&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">ax&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">scatter&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">pos_points&lt;/span>&lt;span class="p">[:,&lt;/span> &lt;span class="mi">0&lt;/span>&lt;span class="p">],&lt;/span> &lt;span class="n">pos_points&lt;/span>&lt;span class="p">[:,&lt;/span> &lt;span class="mi">1&lt;/span>&lt;span class="p">],&lt;/span> &lt;span class="n">color&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;green&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">marker&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;*&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">s&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">marker_size&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">edgecolor&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;white&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">linewidth&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mf">1.25&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">ax&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">scatter&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">neg_points&lt;/span>&lt;span class="p">[:,&lt;/span> &lt;span class="mi">0&lt;/span>&lt;span class="p">],&lt;/span> &lt;span class="n">neg_points&lt;/span>&lt;span class="p">[:,&lt;/span> &lt;span class="mi">1&lt;/span>&lt;span class="p">],&lt;/span> &lt;span class="n">color&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;red&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">marker&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;*&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">s&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">marker_size&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">edgecolor&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;white&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">linewidth&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mf">1.25&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>We also have a few helper functions to make our code DRY/cleaner:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">def&lt;/span> &lt;span class="nf">find_center_point&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">x1&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">y1&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">x2&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">y2&lt;/span>&lt;span class="p">):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">cx&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="n">x1&lt;/span> &lt;span class="o">+&lt;/span> &lt;span class="n">x2&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="o">/&lt;/span> &lt;span class="mi">2&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">cy&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="n">y1&lt;/span> &lt;span class="o">+&lt;/span> &lt;span class="n">y2&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="o">/&lt;/span> &lt;span class="mi">2&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">return&lt;/span> &lt;span class="p">[(&lt;/span>&lt;span class="n">cx&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">cy&lt;/span>&lt;span class="p">)]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">def&lt;/span> &lt;span class="nf">add_points_around_bbox&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">x1&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">y1&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">x2&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">y2&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">distance&lt;/span>&lt;span class="p">):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">cx&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="n">x1&lt;/span> &lt;span class="o">+&lt;/span> &lt;span class="n">x2&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="o">/&lt;/span> &lt;span class="mi">2&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">cy&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="n">y1&lt;/span> &lt;span class="o">+&lt;/span> &lt;span class="n">y2&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="o">/&lt;/span> &lt;span class="mi">2&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">return&lt;/span> &lt;span class="p">[(&lt;/span>&lt;span class="n">cx&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">cy&lt;/span>&lt;span class="p">),&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="n">cx&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">cy&lt;/span> &lt;span class="o">+&lt;/span> &lt;span class="n">distance&lt;/span>&lt;span class="p">),&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="n">cx&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">cy&lt;/span> &lt;span class="o">-&lt;/span> &lt;span class="mi">3&lt;/span>&lt;span class="o">*&lt;/span>&lt;span class="n">distance&lt;/span>&lt;span class="p">)]&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>This is the important loop that applies SAM2 to the detected individuals:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;span class="lnt">16
+&lt;/span>&lt;span class="lnt">17
+&lt;/span>&lt;span class="lnt">18
+&lt;/span>&lt;span class="lnt">19
+&lt;/span>&lt;span class="lnt">20
+&lt;/span>&lt;span class="lnt">21
+&lt;/span>&lt;span class="lnt">22
+&lt;/span>&lt;span class="lnt">23
+&lt;/span>&lt;span class="lnt">24
+&lt;/span>&lt;span class="lnt">25
+&lt;/span>&lt;span class="lnt">26
+&lt;/span>&lt;span class="lnt">27
+&lt;/span>&lt;span class="lnt">28
+&lt;/span>&lt;span class="lnt">29
+&lt;/span>&lt;span class="lnt">30
+&lt;/span>&lt;span class="lnt">31
+&lt;/span>&lt;span class="lnt">32
+&lt;/span>&lt;span class="lnt">33
+&lt;/span>&lt;span class="lnt">34
+&lt;/span>&lt;span class="lnt">35
+&lt;/span>&lt;span class="lnt">36
+&lt;/span>&lt;span class="lnt">37
+&lt;/span>&lt;span class="lnt">38
+&lt;/span>&lt;span class="lnt">39
+&lt;/span>&lt;span class="lnt">40
+&lt;/span>&lt;span class="lnt">41
+&lt;/span>&lt;span class="lnt">42
+&lt;/span>&lt;span class="lnt">43
+&lt;/span>&lt;span class="lnt">44
+&lt;/span>&lt;span class="lnt">45
+&lt;/span>&lt;span class="lnt">46
+&lt;/span>&lt;span class="lnt">47
+&lt;/span>&lt;span class="lnt">48
+&lt;/span>&lt;span class="lnt">49
+&lt;/span>&lt;span class="lnt">50
+&lt;/span>&lt;span class="lnt">51
+&lt;/span>&lt;span class="lnt">52
+&lt;/span>&lt;span class="lnt">53
+&lt;/span>&lt;span class="lnt">54
+&lt;/span>&lt;span class="lnt">55
+&lt;/span>&lt;span class="lnt">56
+&lt;/span>&lt;span class="lnt">57
+&lt;/span>&lt;span class="lnt">58
+&lt;/span>&lt;span class="lnt">59
+&lt;/span>&lt;span class="lnt">60
+&lt;/span>&lt;span class="lnt">61
+&lt;/span>&lt;span class="lnt">62
+&lt;/span>&lt;span class="lnt">63
+&lt;/span>&lt;span class="lnt">64
+&lt;/span>&lt;span class="lnt">65
+&lt;/span>&lt;span class="lnt">66
+&lt;/span>&lt;span class="lnt">67
+&lt;/span>&lt;span class="lnt">68
+&lt;/span>&lt;span class="lnt">69
+&lt;/span>&lt;span class="lnt">70
+&lt;/span>&lt;span class="lnt">71
+&lt;/span>&lt;span class="lnt">72
+&lt;/span>&lt;span class="lnt">73
+&lt;/span>&lt;span class="lnt">74
+&lt;/span>&lt;span class="lnt">75
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="kn">from&lt;/span> &lt;span class="nn">sam2.utils.misc&lt;/span> &lt;span class="kn">import&lt;/span> &lt;span class="n">get_sdpa_settings&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">from&lt;/span> &lt;span class="nn">sam2.build_sam&lt;/span> &lt;span class="kn">import&lt;/span> &lt;span class="n">build_sam2_video_predictor&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">OLD_GPU&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">USE_FLASH_ATTN&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">MATH_KERNEL_ON&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">get_sdpa_settings&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">DEVICE&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">torch&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">device&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;cuda&amp;#39;&lt;/span> &lt;span class="k">if&lt;/span> &lt;span class="n">torch&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">cuda&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">is_available&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="k">else&lt;/span> &lt;span class="s1">&amp;#39;cpu&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">CHECKPOINT&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="sa">f&lt;/span>&lt;span class="s2">&amp;#34;&lt;/span>&lt;span class="si">{&lt;/span>&lt;span class="n">HOME&lt;/span>&lt;span class="si">}&lt;/span>&lt;span class="s2">/checkpoints/sam2_hiera_large.pt&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">CONFIG&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="s2">&amp;#34;sam2_hiera_l.yaml&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">predictor&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">build_sam2_video_predictor&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">CONFIG&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">CHECKPOINT&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">device&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">DEVICE&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">apply_postprocessing&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="kc">False&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Load and display the initial frame with masks&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">def&lt;/span> &lt;span class="nf">show_mask&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">mask&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">ax&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">obj_id&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="kc">None&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">random_color&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="kc">False&lt;/span>&lt;span class="p">):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="n">random_color&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">color&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">np&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">concatenate&lt;/span>&lt;span class="p">([&lt;/span>&lt;span class="n">np&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">random&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">random&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">3&lt;/span>&lt;span class="p">),&lt;/span> &lt;span class="n">np&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">array&lt;/span>&lt;span class="p">([&lt;/span>&lt;span class="mf">0.6&lt;/span>&lt;span class="p">])],&lt;/span> &lt;span class="n">axis&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">else&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">cmap&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">get_cmap&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s2">&amp;#34;tab10&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">cmap_idx&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="mi">0&lt;/span> &lt;span class="k">if&lt;/span> &lt;span class="n">obj_id&lt;/span> &lt;span class="ow">is&lt;/span> &lt;span class="kc">None&lt;/span> &lt;span class="k">else&lt;/span> &lt;span class="n">obj_id&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">color&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">np&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">array&lt;/span>&lt;span class="p">([&lt;/span>&lt;span class="o">*&lt;/span>&lt;span class="n">cmap&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">cmap_idx&lt;/span>&lt;span class="p">)[:&lt;/span>&lt;span class="mi">3&lt;/span>&lt;span class="p">],&lt;/span> &lt;span class="mf">0.6&lt;/span>&lt;span class="p">])&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">h&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">w&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">mask&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">shape&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="mi">2&lt;/span>&lt;span class="p">:]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">mask_image&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">mask&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">reshape&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">h&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">w&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">1&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="o">*&lt;/span> &lt;span class="n">color&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">reshape&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">1&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="o">-&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">ax&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">imshow&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">mask_image&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">def&lt;/span> &lt;span class="nf">show_points&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">coords&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">labels&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">ax&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">marker_size&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mi">200&lt;/span>&lt;span class="p">):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">pos_points&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">coords&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">labels&lt;/span>&lt;span class="o">==&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">neg_points&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">coords&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">labels&lt;/span>&lt;span class="o">==&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">ax&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">scatter&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">pos_points&lt;/span>&lt;span class="p">[:,&lt;/span> &lt;span class="mi">0&lt;/span>&lt;span class="p">],&lt;/span> &lt;span class="n">pos_points&lt;/span>&lt;span class="p">[:,&lt;/span> &lt;span class="mi">1&lt;/span>&lt;span class="p">],&lt;/span> &lt;span class="n">color&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;green&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">marker&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;*&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">s&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">marker_size&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">edgecolor&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;white&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">linewidth&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mf">1.25&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">ax&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">scatter&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">neg_points&lt;/span>&lt;span class="p">[:,&lt;/span> &lt;span class="mi">0&lt;/span>&lt;span class="p">],&lt;/span> &lt;span class="n">pos_points&lt;/span>&lt;span class="p">[:,&lt;/span> &lt;span class="mi">1&lt;/span>&lt;span class="p">],&lt;/span> &lt;span class="n">color&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;red&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">marker&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;*&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">s&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">marker_size&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">edgecolor&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;white&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">linewidth&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mf">1.25&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">with&lt;/span> &lt;span class="n">torch&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">inference_mode&lt;/span>&lt;span class="p">(),&lt;/span> &lt;span class="n">torch&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">autocast&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s2">&amp;#34;cuda&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">dtype&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">torch&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">bfloat16&lt;/span>&lt;span class="p">):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">inference_state&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">predictor&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">init_state&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">video_path&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">output_folder_path&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">figure&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">figsize&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">12&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">8&lt;/span>&lt;span class="p">))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">ax&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">gca&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># Display the original image&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">ax&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">imshow&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">image&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># Add the patch to the Axes&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">plot_with_rect&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">ax&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">image&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">rect_x&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">rect_y&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">rect_width&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">rect_height&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># Track initial masks for each detected person&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">initial_points&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="p">{}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">initial_masks&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="p">{}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">for&lt;/span> &lt;span class="n">ann_obj_id&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="n">x1&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">y1&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">x2&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">y2&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="ow">in&lt;/span> &lt;span class="nb">enumerate&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">filtered_boxes&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">start&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># Generate points within the bounding box and additional points above and below&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">bbox_height&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">y2&lt;/span> &lt;span class="o">-&lt;/span> &lt;span class="n">y1&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">additional_distance&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="mf">0.05&lt;/span> &lt;span class="o">*&lt;/span> &lt;span class="n">bbox_height&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">extended_points&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">add_points_around_bbox&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">x1&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">y1&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">x2&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">y2&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">additional_distance&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">extended_points&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">np&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">array&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">extended_points&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">extended_labels&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">np&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">ones&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nb">len&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">extended_points&lt;/span>&lt;span class="p">),&lt;/span> &lt;span class="n">dtype&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">np&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">int32&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># Store the initial points for later use&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">initial_points&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">ann_obj_id&lt;/span>&lt;span class="p">]&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="n">extended_points&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">extended_labels&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># Add new points for the first frame (using the extended points)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="n">extended_points&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">size&lt;/span> &lt;span class="o">&amp;gt;&lt;/span> &lt;span class="mi">0&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">predictor&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">reset_state&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">inference_state&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">_&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">out_obj_ids&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">out_mask_logits&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">predictor&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">add_new_points&lt;/span>&lt;span class="p">(&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">inference_state&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">inference_state&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">frame_idx&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">frame_idx&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">obj_id&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">ann_obj_id&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">points&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">extended_points&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">labels&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">extended_labels&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">initial_masks&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">ann_obj_id&lt;/span>&lt;span class="p">]&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="n">out_mask_logits&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">]&lt;/span> &lt;span class="o">&amp;gt;&lt;/span> &lt;span class="mf">0.0&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">cpu&lt;/span>&lt;span class="p">()&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">numpy&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># Draw the YOLO bounding box&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">ax&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">add_patch&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">patches&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">Rectangle&lt;/span>&lt;span class="p">((&lt;/span>&lt;span class="n">x1&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">y1&lt;/span>&lt;span class="p">),&lt;/span> &lt;span class="n">x2&lt;/span> &lt;span class="o">-&lt;/span> &lt;span class="n">x1&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">y2&lt;/span> &lt;span class="o">-&lt;/span> &lt;span class="n">y1&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">linewidth&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">edgecolor&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;b&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">facecolor&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;none&amp;#39;&lt;/span>&lt;span class="p">))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># Overlay the SAM2 mask&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">show_mask&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">initial_masks&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">ann_obj_id&lt;/span>&lt;span class="p">],&lt;/span> &lt;span class="n">ax&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">obj_id&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">ann_obj_id&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">show_points&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">extended_points&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">extended_labels&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">ax&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># Show the final plot with the highlighted people&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">show&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;h3 id="propagating-sam2-detections-forward-throughout-the-video">Propagating SAM2 Detections Forward Throughout the Video
+&lt;/h3>&lt;p>We propagate the masks generated in the first frame through the entire video.&lt;/p>
+&lt;div class="notice note" >
+&lt;p class="notice-title">
+&lt;span class="icon-notice baseline">
+&lt;svg xmlns="http://www.w3.org/2000/svg" viewBox="0 128 300 300">
+&lt;path d="M150 128c82.813 0 150 67.188 150 150 0 82.813-67.188 150-150 150C67.187 428 0 360.812 0 278c0-82.813 67.188-150 150-150Zm25 243.555v-37.11c0-3.515-2.734-6.445-6.055-6.445h-37.5c-3.515 0-6.445 2.93-6.445 6.445v37.11c0 3.515 2.93 6.445 6.445 6.445h37.5c3.32 0 6.055-2.93 6.055-6.445Zm-.39-67.188 3.515-121.289c0-1.367-.586-2.734-1.953-3.516-1.172-.976-2.93-1.562-4.688-1.562h-42.968c-1.758 0-3.516.586-4.688 1.563-1.367.78-1.953 2.148-1.953 3.515l3.32 121.29c0 2.734 2.93 4.882 6.64 4.882h36.134c3.515 0 6.445-2.148 6.64-4.883Z"/>
+&lt;/svg>
+&lt;/span>Note&lt;/p>&lt;p>The way we are doing this here is not
+efficient as we are propagating one detected person at a time, and then applying the masks later to the final image. This was
+done because detecting multiple people at once was showing some unwanted artifacts. In a future iteration of this, we will try
+to do the propegation for all detected points at the same time rather than via loops.&lt;/p>&lt;/div>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;span class="lnt">16
+&lt;/span>&lt;span class="lnt">17
+&lt;/span>&lt;span class="lnt">18
+&lt;/span>&lt;span class="lnt">19
+&lt;/span>&lt;span class="lnt">20
+&lt;/span>&lt;span class="lnt">21
+&lt;/span>&lt;span class="lnt">22
+&lt;/span>&lt;span class="lnt">23
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Initialize a dictionary to store masks per frame per person&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">video_segments&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="p">{}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Run propagation for each detected person individually&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">with&lt;/span> &lt;span class="n">torch&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">inference_mode&lt;/span>&lt;span class="p">(),&lt;/span> &lt;span class="n">torch&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">autocast&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s2">&amp;#34;cuda&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">dtype&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">torch&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">bfloat16&lt;/span>&lt;span class="p">):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">for&lt;/span> &lt;span class="n">ann_obj_id&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="n">points&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">labels&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="ow">in&lt;/span> &lt;span class="n">initial_points&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">items&lt;/span>&lt;span class="p">():&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># Reset the state for the current object&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">inference_state&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">predictor&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">init_state&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">video_path&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">output_folder_path&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">predictor&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">reset_state&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">inference_state&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">predictor&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">add_new_points&lt;/span>&lt;span class="p">(&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">inference_state&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">inference_state&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">frame_idx&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">frame_idx&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">obj_id&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">ann_obj_id&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">points&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">points&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">labels&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">labels&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># Propagate the masks for the current object throughout the video&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">for&lt;/span> &lt;span class="n">out_frame_idx&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">out_obj_ids&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">out_mask_logits&lt;/span> &lt;span class="ow">in&lt;/span> &lt;span class="n">predictor&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">propagate_in_video&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">inference_state&lt;/span>&lt;span class="p">):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="n">out_frame_idx&lt;/span> &lt;span class="ow">not&lt;/span> &lt;span class="ow">in&lt;/span> &lt;span class="n">video_segments&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">video_segments&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">out_frame_idx&lt;/span>&lt;span class="p">]&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="p">{}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="n">ann_obj_id&lt;/span> &lt;span class="ow">in&lt;/span> &lt;span class="n">out_obj_ids&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">video_segments&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">out_frame_idx&lt;/span>&lt;span class="p">][&lt;/span>&lt;span class="n">ann_obj_id&lt;/span>&lt;span class="p">]&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="n">out_mask_logits&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">out_obj_ids&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">index&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">ann_obj_id&lt;/span>&lt;span class="p">)]&lt;/span> &lt;span class="o">&amp;gt;&lt;/span> &lt;span class="mf">0.0&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">cpu&lt;/span>&lt;span class="p">()&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">numpy&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>We save the output frames as PNG for better quality (though at a cost of more disk space):&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;span class="lnt">16
+&lt;/span>&lt;span class="lnt">17
+&lt;/span>&lt;span class="lnt">18
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Define the output directory for the frames&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">output_dir&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">os&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">path&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">join&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="sa">f&lt;/span>&lt;span class="s2">&amp;#34;&lt;/span>&lt;span class="si">{&lt;/span>&lt;span class="n">HOME&lt;/span>&lt;span class="si">}&lt;/span>&lt;span class="s2">&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;output_frames&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">os&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">makedirs&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">output_dir&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">exist_ok&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="kc">True&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Render the segmentation results every x frame and save as PNG&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">vis_frame_stride&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="mi">1&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">close&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s2">&amp;#34;all&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">frame_paths&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="p">[]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">for&lt;/span> &lt;span class="n">out_frame_idx&lt;/span> &lt;span class="ow">in&lt;/span> &lt;span class="nb">range&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nb">len&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">processed_frame_names&lt;/span>&lt;span class="p">),&lt;/span> &lt;span class="n">vis_frame_stride&lt;/span>&lt;span class="p">):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">figure&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">figsize&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">6&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">4&lt;/span>&lt;span class="p">))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">title&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="sa">f&lt;/span>&lt;span class="s2">&amp;#34;frame &lt;/span>&lt;span class="si">{&lt;/span>&lt;span class="n">out_frame_idx&lt;/span>&lt;span class="si">}&lt;/span>&lt;span class="s2">&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">imshow&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">Image&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">open&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">os&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">path&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">join&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">processed_dir&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">processed_frame_names&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">out_frame_idx&lt;/span>&lt;span class="p">])))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="n">out_frame_idx&lt;/span> &lt;span class="ow">in&lt;/span> &lt;span class="n">video_segments&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">for&lt;/span> &lt;span class="n">out_obj_id&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">out_mask&lt;/span> &lt;span class="ow">in&lt;/span> &lt;span class="n">video_segments&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">out_frame_idx&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">items&lt;/span>&lt;span class="p">():&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">show_mask&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">out_mask&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">gca&lt;/span>&lt;span class="p">(),&lt;/span> &lt;span class="n">obj_id&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">out_obj_id&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">frame_path&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">os&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">path&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">join&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">output_dir&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="sa">f&lt;/span>&lt;span class="s2">&amp;#34;frame_&lt;/span>&lt;span class="si">{&lt;/span>&lt;span class="n">out_frame_idx&lt;/span>&lt;span class="si">:&lt;/span>&lt;span class="s2">04d&lt;/span>&lt;span class="si">}&lt;/span>&lt;span class="s2">.png&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">savefig&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">frame_path&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">frame_paths&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">append&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">frame_path&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">close&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;h2 id="generating-the-output-video">Generating the Output Video
+&lt;/h2>&lt;p>Finally, we compile the processed frames into an output video.&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="kn">from&lt;/span> &lt;span class="nn">moviepy.editor&lt;/span> &lt;span class="kn">import&lt;/span> &lt;span class="n">VideoFileClip&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">ImageSequenceClip&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Path to the input video&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">input_video_path&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">os&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">path&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">join&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="sa">f&lt;/span>&lt;span class="s2">&amp;#34;&lt;/span>&lt;span class="si">{&lt;/span>&lt;span class="n">HOME&lt;/span>&lt;span class="si">}&lt;/span>&lt;span class="s2">&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;videos&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;input_video.mp4&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Detect the frame rate of the input video&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">video_clip&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">VideoFileClip&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">input_video_path&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">frame_rate&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">video_clip&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">fps&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Create a video from the saved frames using moviepy&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">video_output_path&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">os&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">path&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">join&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="sa">f&lt;/span>&lt;span class="s2">&amp;#34;&lt;/span>&lt;span class="si">{&lt;/span>&lt;span class="n">HOME&lt;/span>&lt;span class="si">}&lt;/span>&lt;span class="s2">&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;videos&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;output_video.mp4&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">clip&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">ImageSequenceClip&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">frame_paths&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">fps&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">frame_rate&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">clip&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">write_videofile&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">video_output_path&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">codec&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;libx264&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>The resulting video demonstrates how SAM2 maintains distinct object tracking throughout the video duration:&lt;/p>
+&lt;div class="video-wrapper">
+&lt;iframe loading="lazy"
+src="https://www.youtube.com/embed/3IbUXK2mydY"
+allowfullscreen
+title="YouTube Video"
+>
+&lt;/iframe>
+&lt;/div>
+&lt;p>Note how the occlusion of the person masked in green by the person masked in orange does not cause the loss of
+tracking for the person masked in green. Even more impressive, the person masked in red is not lost by SAM2 despite being heavily occluded.&lt;/p>
+&lt;h2 id="conclusions">Conclusions
+&lt;/h2>&lt;p>We demonstrated a way to detect and track people seen passing through a designated detection region in a video using YOLO to
+bootstrap SAM2. Next steps include:&lt;/p>
+&lt;ul>
+&lt;li>Cleaning up the code, de-looping the detection (see note in the SAM2 process section)&lt;/li>
+&lt;li>Dockerizing this process&lt;/li>
+&lt;li>Exploring monocular depth estimation as a way to more accurately detect proximity:
+&lt;ul>
+&lt;li>Monocular depth estimation uses trained models that can pick up lighting cues to recreate the information related to the z axis in 2D video.&lt;/li>
+&lt;li>In a subset of cases (perhaps even the majority of cases?), this recreation of z-axis depth perception is accurate enough to provide reliable detection of proximity in all three dimensions of space.&lt;/li>
+&lt;li>Monocular depth estimation is being studied, for example, &lt;a class="link" href="https://medium.com/toyotaresearch/monocular-depth-in-the-real-world-99c2b287df34" target="_blank" rel="noopener"
+>by Toyota&lt;/a> in regards to autonomous vehicle driving. Further, the related field of Gaussian Splat is a very &lt;a class="link" href="https://github.com/MrNeRF/awesome-3D-gaussian-splatting/blob/main/README.md" target="_blank" rel="noopener"
+>active area of research&lt;/a>.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul></description></item></channel></rss>

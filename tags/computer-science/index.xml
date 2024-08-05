@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Computer-Science on</title><link>https://tdj28.github.io/tags/computer-science/</link><description>Recent content in Computer-Science on</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Fri, 20 Jan 2017 19:21:05 -0700</lastBuildDate><atom:link href="https://tdj28.github.io/tags/computer-science/index.xml" rel="self" type="application/rss+xml"/><item><title>Python Uses Operational Chaining for Boolean Comparisons</title><link>https://tdj28.github.io/p/python-uses-operational-chaining-for-boolean-comparisons/</link><pubDate>Fri, 20 Jan 2017 19:21:05 -0700</pubDate><guid>https://tdj28.github.io/p/python-uses-operational-chaining-for-boolean-comparisons/</guid><description>&lt;h2 id="a-python-feature">A Python feature?
+&lt;/h2>&lt;p>A colleague noticed this behavior:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;span class="lnt">5
+&lt;/span>&lt;span class="lnt">6
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="o">&amp;gt;&amp;gt;&amp;gt;&lt;/span> &lt;span class="s1">&amp;#39;a&amp;#39;&lt;/span> &lt;span class="ow">in&lt;/span> &lt;span class="s1">&amp;#39;b&amp;#39;&lt;/span> &lt;span class="o">==&lt;/span> &lt;span class="mi">0&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kc">False&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="o">&amp;gt;&amp;gt;&amp;gt;&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;a&amp;#39;&lt;/span> &lt;span class="ow">in&lt;/span> &lt;span class="s1">&amp;#39;b&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="o">==&lt;/span> &lt;span class="mi">0&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kc">True&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="o">&amp;gt;&amp;gt;&amp;gt;&lt;/span> &lt;span class="s1">&amp;#39;a&amp;#39;&lt;/span> &lt;span class="ow">in&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;b&amp;#39;&lt;/span> &lt;span class="o">==&lt;/span> &lt;span class="mi">0&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="ne">TypeError&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="n">argument&lt;/span> &lt;span class="n">of&lt;/span> &lt;span class="nb">type&lt;/span> &lt;span class="s1">&amp;#39;bool&amp;#39;&lt;/span> &lt;span class="ow">is&lt;/span> &lt;span class="ow">not&lt;/span> &lt;span class="n">iterable&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>offering a bucket of doubloons to anyone who can explain it. The final case is simply a typecasting problem, but the first two cases demonstrate Python&amp;rsquo;s operating chaining behavior.&lt;/p>
+&lt;h2 id="explanation">Explanation
+&lt;/h2>&lt;h3 id="using-the-dis-module-to-dig-deeper">Using the Dis Module to dig deeper
+&lt;/h3>&lt;p>Using the &lt;code>dis&lt;/code>&lt;sup id="fnref:1">&lt;a href="#fn:1" class="footnote-ref" role="doc-noteref">1&lt;/a>&lt;/sup> module, we find:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;span class="lnt">16
+&lt;/span>&lt;span class="lnt">17
+&lt;/span>&lt;span class="lnt">18
+&lt;/span>&lt;span class="lnt">19
+&lt;/span>&lt;span class="lnt">20
+&lt;/span>&lt;span class="lnt">21
+&lt;/span>&lt;span class="lnt">22
+&lt;/span>&lt;span class="lnt">23
+&lt;/span>&lt;span class="lnt">24
+&lt;/span>&lt;span class="lnt">25
+&lt;/span>&lt;span class="lnt">26
+&lt;/span>&lt;span class="lnt">27
+&lt;/span>&lt;span class="lnt">28
+&lt;/span>&lt;span class="lnt">29
+&lt;/span>&lt;span class="lnt">30
+&lt;/span>&lt;span class="lnt">31
+&lt;/span>&lt;span class="lnt">32
+&lt;/span>&lt;span class="lnt">33
+&lt;/span>&lt;span class="lnt">34
+&lt;/span>&lt;span class="lnt">35
+&lt;/span>&lt;span class="lnt">36
+&lt;/span>&lt;span class="lnt">37
+&lt;/span>&lt;span class="lnt">38
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="s1">&amp;#39;a&amp;#39;&lt;/span> &lt;span class="ow">in&lt;/span> &lt;span class="s1">&amp;#39;b&amp;#39;&lt;/span> &lt;span class="o">==&lt;/span> &lt;span class="mi">0&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="mi">7&lt;/span> &lt;span class="mi">0&lt;/span> &lt;span class="n">LOAD_CONST&lt;/span> &lt;span class="mi">1&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;a&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="mi">3&lt;/span> &lt;span class="n">LOAD_CONST&lt;/span> &lt;span class="mi">2&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;b&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="mi">6&lt;/span> &lt;span class="n">DUP_TOP&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="mi">7&lt;/span> &lt;span class="n">ROT_THREE&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="mi">8&lt;/span> &lt;span class="n">COMPARE_OP&lt;/span> &lt;span class="mi">6&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="ow">in&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="mi">11&lt;/span> &lt;span class="n">JUMP_IF_FALSE_OR_POP&lt;/span> &lt;span class="mi">21&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="mi">14&lt;/span> &lt;span class="n">LOAD_CONST&lt;/span> &lt;span class="mi">3&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="mi">17&lt;/span> &lt;span class="n">COMPARE_OP&lt;/span> &lt;span class="mi">2&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="o">==&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="mi">20&lt;/span> &lt;span class="n">RETURN_VALUE&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="o">&amp;gt;&amp;gt;&lt;/span> &lt;span class="mi">21&lt;/span> &lt;span class="n">ROT_TWO&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="mi">22&lt;/span> &lt;span class="n">POP_TOP&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="mi">23&lt;/span> &lt;span class="n">RETURN_VALUE&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="s1">&amp;#39;a&amp;#39;&lt;/span> &lt;span class="ow">in&lt;/span> &lt;span class="s1">&amp;#39;b&amp;#39;&lt;/span> &lt;span class="ow">and&lt;/span> &lt;span class="s1">&amp;#39;b&amp;#39;&lt;/span> &lt;span class="o">==&lt;/span> &lt;span class="mi">0&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="mi">15&lt;/span> &lt;span class="mi">0&lt;/span> &lt;span class="n">LOAD_CONST&lt;/span> &lt;span class="mi">1&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;a&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="mi">3&lt;/span> &lt;span class="n">LOAD_CONST&lt;/span> &lt;span class="mi">2&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;b&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="mi">6&lt;/span> &lt;span class="n">COMPARE_OP&lt;/span> &lt;span class="mi">6&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="ow">in&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="mi">9&lt;/span> &lt;span class="n">JUMP_IF_FALSE_OR_POP&lt;/span> &lt;span class="mi">21&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="mi">12&lt;/span> &lt;span class="n">LOAD_CONST&lt;/span> &lt;span class="mi">2&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;b&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="mi">15&lt;/span> &lt;span class="n">LOAD_CONST&lt;/span> &lt;span class="mi">3&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="mi">18&lt;/span> &lt;span class="n">COMPARE_OP&lt;/span> &lt;span class="mi">2&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="o">==&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="o">&amp;gt;&amp;gt;&lt;/span> &lt;span class="mi">21&lt;/span> &lt;span class="n">RETURN_VALUE&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="s1">&amp;#39;a&amp;#39;&lt;/span> &lt;span class="ow">in&lt;/span> &lt;span class="s1">&amp;#39;a&amp;#39;&lt;/span> &lt;span class="o">==&lt;/span> &lt;span class="mi">0&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="mi">9&lt;/span> &lt;span class="mi">0&lt;/span> &lt;span class="n">LOAD_CONST&lt;/span> &lt;span class="mi">1&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;a&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="mi">3&lt;/span> &lt;span class="n">LOAD_CONST&lt;/span> &lt;span class="mi">1&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;a&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="mi">6&lt;/span> &lt;span class="n">DUP_TOP&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="mi">7&lt;/span> &lt;span class="n">ROT_THREE&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="mi">8&lt;/span> &lt;span class="n">COMPARE_OP&lt;/span> &lt;span class="mi">6&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="ow">in&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="mi">11&lt;/span> &lt;span class="n">JUMP_IF_FALSE_OR_POP&lt;/span> &lt;span class="mi">21&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="mi">14&lt;/span> &lt;span class="n">LOAD_CONST&lt;/span> &lt;span class="mi">2&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="mi">17&lt;/span> &lt;span class="n">COMPARE_OP&lt;/span> &lt;span class="mi">2&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="o">==&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="mi">20&lt;/span> &lt;span class="n">RETURN_VALUE&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="o">&amp;gt;&amp;gt;&lt;/span> &lt;span class="mi">21&lt;/span> &lt;span class="n">ROT_TWO&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="mi">22&lt;/span> &lt;span class="n">POP_TOP&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="mi">23&lt;/span> &lt;span class="n">RETURN_VALUE&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;h3 id="in-words">In words
+&lt;/h3>&lt;p>Parenthesis essential forces Python to do &amp;lsquo;something&amp;rsquo; first before doing anything else. I often use parenthesis out of habit even when not needed just to be 100% clear. The above behavior shows where that habit might come in handy if Python&amp;rsquo;s operation chaining isn&amp;rsquo;t the desired behavior. When we put &lt;code>'a' in 'b'&lt;/code> inside parenthesis, Python is forced to evaluate that independently of the rest of line; this evaluates to &lt;code>True&lt;/code> or &lt;code>False&lt;/code>, and then the &lt;code>== 0&lt;/code> comparison acts as a Boolean comparison, giving expected behavior since Python sees False and 0 as equivalent here.&lt;/p>
+&lt;p>In the first instance above, however, Python is operator chaining. For &lt;code>'a' in 'b' == 0&lt;/code>, it first loads a and b strings such that the stack is&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="p">[&lt;/span> &lt;span class="n">b&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">a&lt;/span> &lt;span class="p">]&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>it then &lt;code>DUP_TOP&lt;/code> duplicates &lt;code>b&lt;/code> so that it doesn’t have to waste time to load it again for the second evaluation, resulting in the stack:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="p">[&lt;/span> &lt;span class="n">b&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">b&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">a&lt;/span> &lt;span class="p">]&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>&lt;code>ROT_THREE&lt;/code> lifts second and third stack item up and the top item down to third place, so now the stack is:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="p">[&lt;/span> &lt;span class="n">b&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">a&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">b&lt;/span> &lt;span class="p">]&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>&lt;code>COMPARE_OP&lt;/code> acts on &lt;code>[ b, a]&lt;/code>, and since it is not true, &lt;code>JUMP_IF_FALSE_OR_POP&lt;/code> forces it to jump and just returns False. This makes sense because it
+sees this as a compound AND statement, and when the first part of an AND statement is false, the entire thing is false and it is a waste of
+resources to compute further.&lt;/p>
+&lt;p>What is interesting is if you do &lt;code>'a' in 'a' == 1&lt;/code>, or &lt;code>'a' in 'a' == 0&lt;/code>. Take the former, for example,
+which after &lt;code>DUP_TOP&lt;/code> gives us the stack:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="p">[&lt;/span> &lt;span class="n">a&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">a&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">a&lt;/span> &lt;span class="p">]&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>Here &lt;code>'a' in 'a'&lt;/code> is obviously true, and these two entries of the stack are replaced with the result of that evaluation, which is &lt;code>True&lt;/code>. This, now being the top of the stack, is popped off by &lt;code>JUMP_IF_FALSE_OR_POP&lt;/code>
+leaving the duplicated &amp;lsquo;a&amp;rsquo; on the top of the stack, where then &lt;code>1&lt;/code> is loaded for the next comparison, so the stack is now:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="p">[&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">a&lt;/span>&lt;span class="p">]&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>and the &lt;code>==&lt;/code> comparison is applied which is indeed False.
+Thus &lt;code>'a' in 'a' == 0&lt;/code> is chained as &lt;code>'a' in 'a' and 'a' == 0&lt;/code> and will also be false. Similarly, &lt;code>'a' in 'b' == 0&lt;/code> is effectively the same as &lt;code>'a' in 'b' and 'b' == 0&lt;/code> which is false.&lt;/p>
+&lt;p>The following behavior, then, makes sense:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;span class="lnt">5
+&lt;/span>&lt;span class="lnt">6
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="o">&amp;gt;&amp;gt;&amp;gt;&lt;/span> &lt;span class="s1">&amp;#39;a&amp;#39;&lt;/span> &lt;span class="ow">in&lt;/span> &lt;span class="s1">&amp;#39;a&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kc">True&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="o">&amp;gt;&amp;gt;&amp;gt;&lt;/span> &lt;span class="s1">&amp;#39;a&amp;#39;&lt;/span> &lt;span class="ow">in&lt;/span> &lt;span class="s1">&amp;#39;a&amp;#39;&lt;/span> &lt;span class="ow">and&lt;/span> &lt;span class="s1">&amp;#39;a&amp;#39;&lt;/span> &lt;span class="o">==&lt;/span> &lt;span class="kc">True&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kc">False&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="o">&amp;gt;&amp;gt;&amp;gt;&lt;/span> &lt;span class="s1">&amp;#39;a&amp;#39;&lt;/span> &lt;span class="ow">in&lt;/span> &lt;span class="s1">&amp;#39;a&amp;#39;&lt;/span> &lt;span class="o">==&lt;/span> &lt;span class="kc">True&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kc">False&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;div class="footnotes" role="doc-endnotes">
+&lt;hr>
+&lt;ol>
+&lt;li id="fn:1">
+&lt;p>&lt;code>pip install dis&lt;/code>&amp;#160;&lt;a href="#fnref:1" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
+&lt;/li>
+&lt;/ol>
+&lt;/div></description></item></channel></rss>

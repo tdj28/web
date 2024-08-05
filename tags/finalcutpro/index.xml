@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Finalcutpro on</title><link>https://tdj28.github.io/tags/finalcutpro/</link><description>Recent content in Finalcutpro on</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Mon, 20 Feb 2017 19:21:05 -0700</lastBuildDate><atom:link href="https://tdj28.github.io/tags/finalcutpro/index.xml" rel="self" type="application/rss+xml"/><item><title>Putting a Space Station Over Philly With Final Cut Pro</title><link>https://tdj28.github.io/p/putting-a-space-station-over-philly-with-final-cut-pro/</link><pubDate>Mon, 20 Feb 2017 19:21:05 -0700</pubDate><guid>https://tdj28.github.io/p/putting-a-space-station-over-philly-with-final-cut-pro/</guid><description>&lt;h2 id="quick-overview">Quick overview
+&lt;/h2>&lt;ul>
+&lt;li>If interested in creating special effects for film projects.&lt;/li>
+&lt;li>Uses Final Cut Pro X and CoreMelt&amp;rsquo;s TrackX Plugin&amp;rsquo;s Simple
+Tracker.&lt;/li>
+&lt;li>In about thirty minutes you can create a passable video that portrays the Star War&amp;rsquo;s Death Star over Philadelphia, PA USA.&lt;/li>
+&lt;li>Resulting video:&lt;/li>
+&lt;/ul>
+&lt;iframe width="560" height="315" src="https://www.youtube.com/embed/it_wj78IbFA" frameborder="0" allowfullscreen>&lt;/iframe>
+&lt;h2 id="gathering-the-software">Gathering the Software
+&lt;/h2>&lt;p>I&amp;rsquo;ll begin with an apology that the software discussed here requires Apple Mac* hardware to run. What we do here can be done with Adobe Premier Pro right out of the box.&lt;/p>
+&lt;p>Assuming you have a Mac* device, this project also requires
+&lt;a class="link" href="https://itunes.apple.com/us/app/final-cut-pro/id424389933?mt=12" target="_blank" rel="noopener"
+>Final Cut Pro&lt;/a>. This is not cheap software, but I&amp;rsquo;ve found it to be worth it if you plan to be doing enough projects. I have many nieces and nephews and we&amp;rsquo;ve had an awesome time making movies with this tool.&lt;/p>
+&lt;p>Using Keyframing, we could get a realistic tracking effect, but this would be a very tedious and time consuming way to proceed. Fortunately there is a plugin we can use that does the tracking nearly automatically.&lt;/p>
+&lt;p>&lt;a class="link" href="https://coremelt.com/products/trackx-powered-by-mocha" target="_blank" rel="noopener"
+>Coremelt&amp;rsquo;s TrackX Plugin&lt;/a> powered by &lt;a class="link" href="https://www.imagineersystems.com/products/what-is-mocha/" target="_blank" rel="noopener"
+>Mocha&lt;/a> analyzes your video frame by frame and attempts to match the motion of the camera. The user needs only provide some very simple guidance.&lt;/p>
+&lt;h2 id="gathering-the-media">Gathering the Media
+&lt;/h2>&lt;p>A quick image search will yield a wide range of choices for images of a space station, in this case the Death Star, but keep an eye towards an example that would look realistic in the
+context of your video. I chose an image that looked a lot
+like what the moon looks like in the daytime.&lt;/p>
+&lt;p>I also filmed a couple of scenes around Philadelphia,
+being careful to move the camera enough to make it
+seem realistic, but smoothly enough with no quick
+motions to make tracking easier for myself.&lt;/p>
+&lt;h2 id="preparing-the-death-star-image">Preparing the Death Star image
+&lt;/h2>&lt;p>When you apply the image, however, you also must keep
+in mind that if it doesn&amp;rsquo;t match the shadowing seen in
+the video, the viewer&amp;rsquo;s mind will feel a bit off about it.
+Look for the shadows in your video and flip the Death Star
+image to match that direction using the &lt;em>flipped&lt;/em> effect:&lt;/p>
+&lt;p>&lt;img src="https://tdj28.github.io/p/putting-a-space-station-over-philly-with-final-cut-pro/assets/PuttingSpaceStationOverPhilly-c9525.png"
+width="404"
+height="387"
+srcset="https://tdj28.github.io/p/putting-a-space-station-over-philly-with-final-cut-pro/assets/PuttingSpaceStationOverPhilly-c9525_hu16114439491905543405.png 480w, https://tdj28.github.io/p/putting-a-space-station-over-philly-with-final-cut-pro/assets/PuttingSpaceStationOverPhilly-c9525_hu11687818868467957570.png 1024w"
+loading="lazy"
+alt="flipped"
+class="gallery-image"
+data-flex-grow="104"
+data-flex-basis="250px"
+>&lt;/p>
+&lt;p>That is, import the media, drag it down to your timeline, and then drag the &lt;em>flipped&lt;/em> effect to the corresponding timeline entry of the Death Star image. Next right click on that
+clip and create a new compound clip:&lt;/p>
+&lt;p>&lt;img src="https://tdj28.github.io/p/putting-a-space-station-over-philly-with-final-cut-pro/assets/PuttingSpaceStationOverPhilly-e69aa.png"
+width="396"
+height="369"
+srcset="https://tdj28.github.io/p/putting-a-space-station-over-philly-with-final-cut-pro/assets/PuttingSpaceStationOverPhilly-e69aa_hu2467496870127994718.png 480w, https://tdj28.github.io/p/putting-a-space-station-over-philly-with-final-cut-pro/assets/PuttingSpaceStationOverPhilly-e69aa_hu65340499401128883.png 1024w"
+loading="lazy"
+alt="compound_clip"
+class="gallery-image"
+data-flex-grow="107"
+data-flex-basis="257px"
+>&lt;/p>
+&lt;p>This is required for the TrackX plugin. Once you&amp;rsquo;ve done
+that, the compound clip of the Death Star will show up
+in your media and you can delete from your time line.&lt;/p>
+&lt;p>Because I had one scene facing West and another facing East,
+which is not recommended because that would imply two
+Death Stars in the sky, I needed to create two compound
+clips, one flipped from the other, in order to match
+the sun direction.&lt;/p>
+&lt;h2 id="tracking-your-video-clips">Tracking your video clips
+&lt;/h2>&lt;p>Next we can start the tracking process. Import your video
+clips from your device or hard-drive and then drag the
+corresponding file from the media section onto the timeline.&lt;/p>
+&lt;p>Then, go to the &lt;em>generators&lt;/em> menu and select Simple Tracker
+under the C2 TrackX entry:&lt;/p>
+&lt;p>&lt;img src="https://tdj28.github.io/p/putting-a-space-station-over-philly-with-final-cut-pro/assets/PuttingSpaceStationOverPhilly-230aa.png"
+width="513"
+height="392"
+srcset="https://tdj28.github.io/p/putting-a-space-station-over-philly-with-final-cut-pro/assets/PuttingSpaceStationOverPhilly-230aa_hu17591549597905825739.png 480w, https://tdj28.github.io/p/putting-a-space-station-over-philly-with-final-cut-pro/assets/PuttingSpaceStationOverPhilly-230aa_hu13884889655039047872.png 1024w"
+loading="lazy"
+alt="generators"
+class="gallery-image"
+data-flex-grow="130"
+data-flex-basis="314px"
+>&lt;/p>
+&lt;p>Drag that &lt;strong>on top of&lt;/strong> the video clip. Your timeline
+will look something like this:&lt;/p>
+&lt;p>&lt;img src="https://tdj28.github.io/p/putting-a-space-station-over-philly-with-final-cut-pro/assets/PuttingSpaceStationOverPhilly-a7eb0.png"
+width="426"
+height="327"
+srcset="https://tdj28.github.io/p/putting-a-space-station-over-philly-with-final-cut-pro/assets/PuttingSpaceStationOverPhilly-a7eb0_hu14198614593679810896.png 480w, https://tdj28.github.io/p/putting-a-space-station-over-philly-with-final-cut-pro/assets/PuttingSpaceStationOverPhilly-a7eb0_hu13852556038239015233.png 1024w"
+loading="lazy"
+alt="timeline"
+class="gallery-image"
+data-flex-grow="130"
+data-flex-basis="312px"
+>&lt;/p>
+&lt;p>Above, I have three video clips and I have trimmed
+the Simple Tracker to fit each one and thus have three
+Simple Tracker entries in the timeline, one for each video.&lt;/p>
+&lt;p>Click on the Simple Tracker entry on the timeline and you&amp;rsquo;ll
+now be able to set up tracking for your video:&lt;/p>
+&lt;p>&lt;img src="https://tdj28.github.io/p/putting-a-space-station-over-philly-with-final-cut-pro/assets/PuttingSpaceStationOverPhilly-c80e1.png"
+width="935"
+height="397"
+srcset="https://tdj28.github.io/p/putting-a-space-station-over-philly-with-final-cut-pro/assets/PuttingSpaceStationOverPhilly-c80e1_hu2723123764137859549.png 480w, https://tdj28.github.io/p/putting-a-space-station-over-philly-with-final-cut-pro/assets/PuttingSpaceStationOverPhilly-c80e1_hu7272447401053069941.png 1024w"
+loading="lazy"
+alt="simple_tracker"
+class="gallery-image"
+data-flex-grow="235"
+data-flex-basis="565px"
+>&lt;/p>
+&lt;p>Figuring out what shape and placement for your area selection
+in Simple Tracker is an art more or less. Be sure to select
+an area that is completely in view for the majority of the clip.
+In the above screenshot, I chose the top of two sky-scrapers that are clearly and consistently within view during the entire
+clip. This helps the tracker maintain a passable tracking.&lt;/p>
+&lt;p>Drag your compound clip of the Death Star that you made
+in the previous step over to the Insert Layer section, and
+then adjust the X, Y offsets and scale until the image placement
+in your video looks satisfactory.&lt;/p>
+&lt;p>In the timeline, move to the start of the
+video, and after you set your tracking shape selection,
+click on the &lt;em>Track forward&lt;/em> button (white sideways arrow
+with the T in it). The plugin will iterate through each
+frame attempting to track the camera location in
+such a way that it can superimpose an image of the Death
+Star on the sky so that it appears as if it is stationary
+relative to the camera. In the resulting video (above)
+you can see, if you look closely enough, some flaws, but
+for the relatively small time put into it, the effect
+is quite good.&lt;/p>
+&lt;h2 id="tutorial-video">Tutorial Video
+&lt;/h2>&lt;p>Finally, here is a quick how-to video walking you
+through the process in real-time:&lt;/p>
+&lt;iframe width="560" height="315" src="https://www.youtube.com/embed/se17wSZzKB8" frameborder="0" allowfullscreen>&lt;/iframe>
+&lt;h2 id="further-references">Further references
+&lt;/h2>&lt;p>&lt;a class="link" href="https://www.youtube.com/watch?v=bfhRtd1z2PY" target="_blank" rel="noopener"
+>Another example of this plugin&lt;/a>&lt;/p>
+&lt;p>&lt;a class="link" href="https://www.youtube.com/watch?v=NYfMugEz2zA" target="_blank" rel="noopener"
+>Using Adobe to create this effect&lt;/a>&lt;/p></description></item></channel></rss>
