@@ -19,10 +19,6 @@ summary: A look at how Bayesian statistics can help us understand ways to make d
 In this post, we explore Bayesian probabilities through the lens of the accuracies of medical tests. We show how Bayesian priors can
 help refine our projections, and how to do this accurately.
 
-<!-- {{% blocks/lead color="dark" %}}
-This post is about _math_ not _medicine_.
-{{% /blocks/lead %}} -->
-
 {{% alert title="Warning" color="warning" %}}
 This post is for a mathematical discussion, not a medical discussion. The intent is to inform the reader about how
 probability works in relation to tests that can have false positives/negatives. The author has no medical training nor
