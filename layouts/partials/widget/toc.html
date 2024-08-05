@@ -1,0 +1,21 @@
+<section class="widget archives">
+    <div class="widget-icon" id="toc-toggle">
+        {{ partial "helper/icon" "notes" }} <!-- Replace with your note icon -->
+    </div>
+    <h2 class="widget-title section-title">{{ T "article.tableOfContents" }}</h2>
+    
+    <div class="widget--toc" id="toc-content">
+        {{ .Context.TableOfContents }}
+    </div>
+</section>
+
+<script>
+    document.getElementById('toc-toggle').addEventListener('click', function() {
+        var tocContent = document.getElementById('toc-content');
+        if (tocContent.style.display === 'none') {
+            tocContent.style.display = 'block';
+        } else {
+            tocContent.style.display = 'none';
+        }
+    });
+</script>

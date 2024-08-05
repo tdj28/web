@@ -6,7 +6,7 @@ favicon = "/favicon.ico"
 
 [footer]
 since = 2024
-customText = "Why are you reading this?"
+customText = "You are a wonderful manifestation of the evolution of the universe."
 
 [dateFormat]
 published = "Jan 02, 2006"
@@ -68,7 +68,7 @@ src = ""
 
 [colorScheme]
 toggle = true
-default = "dark"
+default = "auto"
 
 [imageProcessing.cover]
 enabled = true

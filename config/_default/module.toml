@@ -2,3 +2,4 @@
 path = "github.com/CaiJimmy/hugo-theme-stack/v3"
 [[imports]]
 path = "github.com/martignoni/hugo-notice"
+
